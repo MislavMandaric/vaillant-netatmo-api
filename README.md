@@ -1,0 +1,1 @@
+# vaillant_netatmo_api
