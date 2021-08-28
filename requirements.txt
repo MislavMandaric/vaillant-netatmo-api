@@ -1,0 +1,4 @@
+Authlib @ git+https://github.com/lepture/authlib@f27b4dabe4843d334570d25af011ca236c8af501
+cffi==1.14.6
+cryptography==3.4.8
+pycparser==2.20
