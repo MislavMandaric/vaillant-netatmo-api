@@ -114,6 +114,7 @@ This library would not exist if it weren't for previous implementations by the f
 
 * https://github.com/philippelt/netatmo-api-python
 * https://github.com/jabesq/netatmo-api-python
+* https://github.com/samueldumont/netatmo-api-python
 * https://github.com/jabesq/pyatmo
 * https://github.com/pjmaenh/pyvaillant
 
