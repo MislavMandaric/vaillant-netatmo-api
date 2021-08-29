@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from datetime import datetime
 from enum import Enum
-from typing import Awaitable, Callable
+from typing import AsyncGenerator, Awaitable, Callable
 
 from authlib.oauth2.rfc6749 import OAuth2Token
 
@@ -18,6 +19,20 @@ _VAILLANT_DEVICE_TYPE = "NAVaillant"
 _RESPONSE_STATUS_OK = "ok"
 _SETPOINT_DEFAULT_DURATION_MINS = 120
 
+
+@asynccontextmanager
+async def thermostat_client(
+    client_id: str,
+    client_secret: str,
+    token: OAuth2Token,
+    update_token: Callable[[OAuth2Token, str | None, str | None], Awaitable[None]],
+) -> AsyncGenerator[ThermostatClient, None]:
+    client = ThermostatClient(client_id, client_secret, token, update_token)
+
+    try:
+        yield client
+    finally:
+        await client.async_close()
 
 class ThermostatClient(BaseClient):
     """

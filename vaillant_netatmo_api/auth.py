@@ -2,10 +2,26 @@
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
 from authlib.oauth2.rfc6749 import OAuth2Token
 
 from .base import BaseClient
 
+
+@asynccontextmanager
+async def auth_client(
+    client_id: str,
+    client_secret: str,
+    scope: str,
+) -> AsyncGenerator[AuthClient, None]:
+    client = AuthClient(client_id, client_secret, scope)
+
+    try:
+        yield client
+    finally:
+        await client.async_close()
 
 class AuthClient(BaseClient):
     """
