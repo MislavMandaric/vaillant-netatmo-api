@@ -1,4 +1,4 @@
-# vaillant_netatmo_api
+# vaillant-netatmo-api
 
 ## General
 
@@ -9,7 +9,7 @@ Python 3 library for managing Vaillant thermostats using the Netatmo API. It pro
 Library can be simply installed using pip.
 
 ```bash
-pip install vaillant_netatmo_api
+pip install vaillant-netatmo-api
 ```
 
 Library requires Python 3 and has [authlib](https://github.com/lepture/authlib) and [httpx](https://github.com/encode/httpx) dependencies.
@@ -27,6 +27,8 @@ Since Vaillant uses Resource Owner Password Credentials Grant, there is only one
 * `async_get_token`: getting a bearer token
 
 ```python
+from vaillant_netatmo_api import serialize_token, auth_client
+
 CLIENT_ID = ""
 CLIENT_SECRET = ""
 SCOPE = ""
@@ -52,6 +54,8 @@ There are three APIs available for the `ThermostatClient`, all of which require 
 * `async_set_minor_mode`: changing minor mode for a device and module (ie. manual mode, away mode or hot water boost mode)
 
 ```python
+from vaillant_netatmo_api import deserialize_token, thermostat_client, SystemMode
+
 CLIENT_ID = ""
 CLIENT_SECRET = ""
 
