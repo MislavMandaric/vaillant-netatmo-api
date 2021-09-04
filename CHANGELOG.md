@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.1 (2021-09-04)
+### Fix
+* Fixes an unsupported argument exception when deactivating minor mode ([`72c5525`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/72c55255ebd0b2b5035da11aec53fa6352a26b4c))
+
 ## v0.1.0 (2021-09-04)
 ### Feature
 * Changes naming and structure to align with pip convention of having dashes instead of underscores. ([`11bd52d`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/11bd52d1d418879bd794b14ad6075ad8f56892a2))
