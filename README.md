@@ -2,7 +2,7 @@
 
 [![GitHub version](https://badge.fury.io/gh/MislavMandaric%2Fvaillant-netatmo-api.svg)](https://badge.fury.io/gh/MislavMandaric%2Fvaillant-netatmo-api)
 [![PyPI version](https://badge.fury.io/py/vaillant-netatmo-api.svg)](https://badge.fury.io/py/vaillant-netatmo-api)
-![Python test](https://github.com/MislavMandaric/vaillant-netatmo-api/actions/workflows/python-test.yml/badge.svg)
+![Tests](https://github.com/MislavMandaric/vaillant-netatmo-api/actions/workflows/tests.yml/badge.svg)
 
 
 ## General
