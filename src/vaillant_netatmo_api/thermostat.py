@@ -136,7 +136,7 @@ class ThermostatClient(BaseClient):
                 raise UnsuportedArgumentsException()
             data["setpoint_endtime"] = round(setpoint_endtime.timestamp())
 
-        if setpoint_temp is None and setpoint_mode == SetpointMode.MANUAL:
+        if activate and setpoint_temp is None and setpoint_mode == SetpointMode.MANUAL:
             raise UnsuportedArgumentsException()
         elif setpoint_temp is not None:
             if setpoint_mode != SetpointMode.MANUAL:
