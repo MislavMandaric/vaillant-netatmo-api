@@ -1,5 +1,5 @@
 anyio==3.3.0
-Authlib @ git+https://github.com/lepture/authlib@f27b4dabe4843d334570d25af011ca236c8af501
+Authlib==0.15.4
 certifi==2021.5.30
 cffi==1.14.6
 charset-normalizer==2.0.4
