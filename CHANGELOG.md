@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.2 (2021-09-09)
+### Fix
+* Updates authlib dependency to new beta to fix header length issue ([`eb7616f`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/eb7616f2141308331fa669890d8865fda9912d87))
+
 ## v0.1.1 (2021-09-04)
 ### Fix
 * Fixes an unsupported argument exception when deactivating minor mode ([`72c5525`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/72c55255ebd0b2b5035da11aec53fa6352a26b4c))
