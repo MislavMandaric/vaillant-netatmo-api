@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import os
 
 from dotenv import load_dotenv
-from vaillant_netatmo_api import AuthClient, ThermostatClient, SetpointMode
+from src.vaillant_netatmo_api import AuthClient, ThermostatClient, SetpointMode
 
 load_dotenv()
 
