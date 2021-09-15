@@ -3,7 +3,7 @@ attrs==21.2.0
 Authlib==1.0.0b1
 certifi==2021.5.30
 cffi==1.14.6
-charset-normalizer==2.0.4
+charset-normalizer==2.0.5
 cryptography==3.4.8
 flake8==3.9.2
 h11==0.12.0
