@@ -131,22 +131,13 @@ class ThermostatClient(BaseClient):
             "activate": activate,
         }
 
-        if not activate and (setpoint_endtime is not None or setpoint_temp is not None):
-            raise UnsuportedArgumentsException()
+        endtime = self._get_setpoint_endtime(setpoint_mode, activate, setpoint_endtime)
+        if endtime is not None:
+            data["setpoint_endtime"] = endtime
 
-        if activate and setpoint_endtime is None and (setpoint_mode == SetpointMode.MANUAL or setpoint_mode == SetpointMode.HWB):
-            raise UnsuportedArgumentsException()
-        elif setpoint_endtime is not None:
-            if setpoint_endtime <= datetime.now():
-                raise UnsuportedArgumentsException()
-            data["setpoint_endtime"] = round(setpoint_endtime.timestamp())
-
-        if activate and setpoint_temp is None and setpoint_mode == SetpointMode.MANUAL:
-            raise UnsuportedArgumentsException()
-        elif setpoint_temp is not None:
-            if setpoint_mode != SetpointMode.MANUAL:
-                raise UnsuportedArgumentsException()
-            data["setpoint_temp"] = setpoint_temp
+        temp = self._get_setpoint_temp(setpoint_mode, activate, setpoint_temp)
+        if temp is not None:
+            data["setpoint_temp"] = temp
 
         resp = await self._client.post(
             _SET_MINOR_MODE_PATH,
@@ -158,6 +149,46 @@ class ThermostatClient(BaseClient):
 
         if body["status"] != _RESPONSE_STATUS_OK:
             raise BadResponseException()
+
+    def _get_setpoint_endtime(
+        self, 
+        setpoint_mode: SetpointMode,
+        activate: bool,
+        setpoint_endtime: datetime | None = None,
+    ) -> int | None:
+        if not activate:
+            if setpoint_endtime is not None:
+                raise UnsuportedArgumentsException()
+            return None
+        else:
+            if setpoint_endtime is None:
+                if setpoint_mode == SetpointMode.MANUAL or setpoint_mode == SetpointMode.HWB:
+                    raise UnsuportedArgumentsException()
+                return None
+            else:
+                if setpoint_endtime <= datetime.now():
+                    raise UnsuportedArgumentsException()
+                return round(setpoint_endtime.timestamp())
+
+    def _get_setpoint_temp(
+        self, 
+        setpoint_mode: SetpointMode,
+        activate: bool,
+        setpoint_temp: float | None = None,
+    ) -> float | None:
+        if not activate:
+            if setpoint_temp is not None:
+                raise UnsuportedArgumentsException()
+            return None
+        else:
+            if setpoint_temp is None:
+                if setpoint_mode == SetpointMode.MANUAL:
+                    raise UnsuportedArgumentsException()
+                return None
+            else:
+                if setpoint_mode != SetpointMode.MANUAL:
+                    raise UnsuportedArgumentsException()
+                return setpoint_temp
 
 
 class Device:
