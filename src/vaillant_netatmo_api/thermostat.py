@@ -131,7 +131,12 @@ class ThermostatClient(BaseClient):
             "activate": activate,
         }
 
-        if setpoint_endtime is not None:
+        if not activate and (setpoint_endtime is not None or setpoint_temp is not None):
+            raise UnsuportedArgumentsException()
+
+        if activate and setpoint_endtime is None and (setpoint_mode == SetpointMode.MANUAL or setpoint_mode == SetpointMode.HWB):
+            raise UnsuportedArgumentsException()
+        elif setpoint_endtime is not None:
             if setpoint_endtime <= datetime.now():
                 raise UnsuportedArgumentsException()
             data["setpoint_endtime"] = round(setpoint_endtime.timestamp())
@@ -181,6 +186,16 @@ class Device:
         self.setpoint_hwb = Setpoint(**setpoint_hwb)
         self.modules = [Module(**module) for module in modules]
 
+    def __eq__(self, other):
+        if (not isinstance(other, Device)):
+            return False
+        
+        return self.id == other.id and \
+            self.type == other.type and \
+            self.station_name == other.station_name and \
+            self.firmware == other.firmware and \
+            len(self.modules) == len(other.modules) and \
+            all([False for i, j in zip(self.modules, other.modules) if i != j])
 
 class Module:
     """Module model representing a Vaillant thermostat."""
@@ -205,6 +220,15 @@ class Module:
         self.setpoint_away = Setpoint(**setpoint_away)
         self.setpoint_manual = Setpoint(**setpoint_manual)
         self.measured = Measured(**measured)
+
+    def __eq__(self, other):
+        if (not isinstance(other, Module)):
+            return False
+        
+        return self.id == other.id and \
+            self.type == other.type and \
+            self.module_name == other.module_name and \
+            self.firmware == other.firmware
 
 
 class Setpoint:
