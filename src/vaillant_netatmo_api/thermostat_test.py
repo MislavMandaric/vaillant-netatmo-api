@@ -60,8 +60,6 @@ set_minor_mode_request = {
     "module_id": "module",
     "setpoint_mode": "away",
     "activate": True,
-    # "setpoint_endtime": None,
-    # "setpoint_temp": None,
     "access_token": "12345",
 }
 
