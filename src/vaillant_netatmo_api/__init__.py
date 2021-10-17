@@ -1,7 +1,20 @@
 """Module HTTP communication with the Netatmo API."""
 
 from .auth import AuthClient, auth_client
-from .errors import BadResponseException, UnsuportedArgumentsException
+from .errors import (
+    ApiException,
+    ResponseException,
+    NetworkException,
+    NetworkTimeoutException,
+    NonRetryableException,
+    RequestBackoffException,
+    RequestClientException,
+    RequestException,
+    RequestServerException,
+    RequestUnauthorizedException,
+    RetryableException,
+    UnsuportedArgumentsException,
+)
 from .thermostat import (
     Device,
     Measured,
@@ -17,7 +30,17 @@ from .token import deserialize_token, serialize_token
 __all__ = [
     "AuthClient",
     "ThermostatClient",
-    "BadResponseException",
+    "ApiException",
+    "ResponseException",
+    "NetworkException",
+    "NetworkTimeoutException",
+    "NonRetryableException",
+    "RequestBackoffException",
+    "RequestClientException",
+    "RequestException",
+    "RequestServerException",
+    "RequestUnauthorizedException",
+    "RetryableException",
     "UnsuportedArgumentsException",
     "Device",
     "Module",

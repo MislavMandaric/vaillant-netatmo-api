@@ -64,7 +64,7 @@ class RequestException(RetryableException):
     """Exception which is thrown when server returns any other non-2xx response."""
 
 
-class BadResponseException(NonRetryableException):
+class ResponseException(NonRetryableException):
     """Exception which is thrown when server returns a valid HTTP response, but the request was not successfully handled and the response contains errors."""
 
 

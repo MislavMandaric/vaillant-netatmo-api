@@ -10,7 +10,7 @@ from typing import AsyncGenerator, Awaitable, Callable
 from authlib.oauth2.rfc6749 import OAuth2Token
 
 from .base import BaseClient
-from .errors import BadResponseException, UnsuportedArgumentsException
+from .errors import ResponseException, UnsuportedArgumentsException
 
 _GET_THERMOSTATS_DATA_PATH = "/api/getthermostatsdata"
 _SET_SYSTEM_MODE_PATH = "/api/setsystemmode"
@@ -79,7 +79,7 @@ class ThermostatClient(BaseClient):
         body = resp.json()
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise BadResponseException()
+            raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
 
         return [Device(**device) for device in body["body"]["devices"]]
 
@@ -107,7 +107,7 @@ class ThermostatClient(BaseClient):
         body = resp.json()
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise BadResponseException()
+            raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
 
     async def async_set_minor_mode(
         self,
@@ -148,7 +148,7 @@ class ThermostatClient(BaseClient):
         body = resp.json()
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise BadResponseException()
+            raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
 
     def _get_setpoint_endtime(
         self, 
@@ -158,16 +158,16 @@ class ThermostatClient(BaseClient):
     ) -> int | None:
         if not activate:
             if setpoint_endtime is not None:
-                raise UnsuportedArgumentsException()
+                raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
             return None
         else:
             if setpoint_endtime is None:
                 if setpoint_mode == SetpointMode.MANUAL or setpoint_mode == SetpointMode.HWB:
-                    raise UnsuportedArgumentsException()
+                    raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
                 return None
             else:
                 if setpoint_endtime <= datetime.now():
-                    raise UnsuportedArgumentsException()
+                    raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
                 return round(setpoint_endtime.timestamp())
 
     def _get_setpoint_temp(
@@ -178,16 +178,16 @@ class ThermostatClient(BaseClient):
     ) -> float | None:
         if not activate:
             if setpoint_temp is not None:
-                raise UnsuportedArgumentsException()
+                raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
             return None
         else:
             if setpoint_temp is None:
                 if setpoint_mode == SetpointMode.MANUAL:
-                    raise UnsuportedArgumentsException()
+                    raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
                 return None
             else:
                 if setpoint_mode != SetpointMode.MANUAL:
-                    raise UnsuportedArgumentsException()
+                    raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
                 return setpoint_temp
 
 
