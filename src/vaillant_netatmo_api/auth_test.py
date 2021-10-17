@@ -3,6 +3,7 @@ import httpx
 import pytest
 
 from .auth import auth_client
+from .errors import RequestClientException
 
 get_token_request = {
     "grant_type": "password",
@@ -28,7 +29,7 @@ class TestAuth:
         respx_mock.post("https://api.netatmo.com/oauth2/token", data=get_token_request).respond(400)
 
         async with auth_client(get_token_request["client_id"], get_token_request["client_secret"], get_token_request["scope"]) as client:
-            with pytest.raises(httpx.HTTPStatusError):
+            with pytest.raises(RequestClientException):
                 await client.async_get_token(get_token_request["username"], get_token_request["password"], get_token_request["user_prefix"], get_token_request["app_version"])
 
     async def test_async_get_token__valid_request_params__returns_valid_oauth_token(self, respx_mock):

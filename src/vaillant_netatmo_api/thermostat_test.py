@@ -1,8 +1,8 @@
 from datetime import datetime
-import httpx
 import pytest
 
-from .thermostat import Device, SetpointMode, SystemMode, UnsuportedArgumentsException, thermostat_client
+from .thermostat import Device, SetpointMode, SystemMode, thermostat_client
+from .errors import RequestClientException, UnsuportedArgumentsException
 
 token = {
     "access_token": "12345",
@@ -73,7 +73,7 @@ class TestThermostat:
         respx_mock.post("https://api.netatmo.com/api/getthermostatsdata", data=get_thermostats_data_request).respond(400)
 
         async with thermostat_client("", "", token, None) as client:
-            with pytest.raises(httpx.HTTPStatusError):
+            with pytest.raises(RequestClientException):
                 await client.async_get_thermostats_data()
 
     async def test_async_get_thermostats_data__valid_request_params__returns_valid_device_list(self, respx_mock):
@@ -92,7 +92,7 @@ class TestThermostat:
         respx_mock.post("https://api.netatmo.com/api/setsystemmode", data=set_system_mode_request).respond(400)
 
         async with thermostat_client("", "", token, None) as client:
-            with pytest.raises(httpx.HTTPStatusError):
+            with pytest.raises(RequestClientException):
                 await client.async_set_system_mode(set_system_mode_request["device_id"], set_system_mode_request["module_id"], SystemMode.SUMMER)
 
     async def test_async_set_system_mode__valid_request_params__doesnt_raise_error(self, respx_mock):
@@ -105,7 +105,7 @@ class TestThermostat:
         respx_mock.post("https://api.netatmo.com/api/setminormode", data=set_minor_mode_request).respond(400)
 
         async with thermostat_client("", "", token, None) as client:
-            with pytest.raises(httpx.HTTPStatusError):
+            with pytest.raises(RequestClientException):
                 await client.async_set_minor_mode(set_minor_mode_request["device_id"], set_minor_mode_request["module_id"], SetpointMode.AWAY, True)
 
     async def test_async_set_minor_mode__activate_manual_without_temp_and_endtime__raises_error(self):
