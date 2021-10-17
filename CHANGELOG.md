@@ -2,6 +2,17 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.0 (2021-10-17)
+### Feature
+* Adds new retry policy to all requests with new library ([`23a48c1`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/23a48c1ec86e5bfd1358299eb45528b44d3bef40))
+* Adds retry policy to all requests ([`f9875a6`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/f9875a6974412de9a59c3adbb0c5f2e2472a4561))
+* Wrapping http calls with the error handler ([`4d7011f`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/4d7011fbb82eaae9a5ae36453d7c8f9d76e33696))
+* Using and exporting new error models ([`1d8677c`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/1d8677c1169902952f47a5751d2232b1c165eb81))
+* Adds whole new error hierarchy module. ([`947cd95`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/947cd95139bc5220fdd246a9ad3842315249be93))
+
+### Fix
+* Increases default timeout for all api calls to 30s. This should hopefully fix current timeout issues. If this fixes a problem, it needs to be revisited and better mechanism should be put in place (eg. in combination with retries, each subsequent call can have increased timeout) ([`af5e1c8`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/af5e1c8155b8e582c6a883a4bb5c4db107790bdc))
+
 ## v0.1.2 (2021-09-09)
 ### Fix
 * Updates authlib dependency to new beta to fix header length issue ([`eb7616f`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/eb7616f2141308331fa669890d8865fda9912d87))
