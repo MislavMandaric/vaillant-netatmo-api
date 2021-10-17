@@ -46,7 +46,7 @@ class BaseClient:
             token_endpoint_auth_method=_TOKEN_AUTH_METHOD,
             token_placement=_TOKEN_PLACEMENT,
             base_url=_API_HOST,
-            timeout=30.0,
+            timeout=15.0,
         )
 
     async def async_close(self) -> None:
