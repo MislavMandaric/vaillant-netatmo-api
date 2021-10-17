@@ -6,9 +6,10 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from authlib.oauth2.rfc6749 import OAuth2Token
+from retry import retry
 
 from .base import BaseClient
-from .errors import client_error_handler
+from .errors import RetryableException, client_error_handler
 
 
 @asynccontextmanager
@@ -49,6 +50,7 @@ class AuthClient(BaseClient):
             scope=scope,
         )
 
+    @retry(RetryableException, tries=10, delay=1, max_delay=30, backoff=2, jitter=(1, 4))
     async def async_get_token(
         self,
         username: str,

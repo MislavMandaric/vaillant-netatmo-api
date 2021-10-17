@@ -8,9 +8,10 @@ from enum import Enum
 from typing import AsyncGenerator, Awaitable, Callable
 
 from authlib.oauth2.rfc6749 import OAuth2Token
+from retry import retry
 
 from .base import BaseClient
-from .errors import ResponseException, UnsuportedArgumentsException, client_error_handler
+from .errors import ResponseException, RetryableException, UnsuportedArgumentsException, client_error_handler
 
 _GET_THERMOSTATS_DATA_PATH = "/api/getthermostatsdata"
 _SET_SYSTEM_MODE_PATH = "/api/setsystemmode"
@@ -61,6 +62,7 @@ class ThermostatClient(BaseClient):
             update_token=update_token,
         )
 
+    @retry(RetryableException, tries=10, delay=1, max_delay=30, backoff=2, jitter=(1, 4))
     async def async_get_thermostats_data(self) -> list[Device]:
         """
         Get thermostat data from the Netatmo API.
@@ -84,6 +86,7 @@ class ThermostatClient(BaseClient):
 
             return [Device(**device) for device in body["body"]["devices"]]
 
+    @retry(RetryableException, tries=10, delay=1, max_delay=30, backoff=2, jitter=(1, 4))
     async def async_set_system_mode(
         self, device_id: str, module_id: str, system_mode: SystemMode
     ) -> None:
@@ -111,6 +114,7 @@ class ThermostatClient(BaseClient):
             if body["status"] != _RESPONSE_STATUS_OK:
                 raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
 
+    @retry(RetryableException, tries=10, delay=1, max_delay=30, backoff=2, jitter=(1, 4))
     async def async_set_minor_mode(
         self,
         device_id: str,
