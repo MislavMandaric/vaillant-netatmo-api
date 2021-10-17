@@ -8,6 +8,7 @@ from typing import AsyncGenerator
 from authlib.oauth2.rfc6749 import OAuth2Token
 
 from .base import BaseClient
+from .errors import client_error_handler
 
 
 @asynccontextmanager
@@ -61,9 +62,10 @@ class AuthClient(BaseClient):
         Returns an OAuth token object containing access and refresh tokens.
         """
 
-        return await self._client.fetch_token(
-            username=username,
-            password=password,
-            user_prefix=user_prefix,
-            app_version=app_version,
-        )
+        with client_error_handler():
+            return await self._client.fetch_token(
+                username=username,
+                password=password,
+                user_prefix=user_prefix,
+                app_version=app_version,
+            )

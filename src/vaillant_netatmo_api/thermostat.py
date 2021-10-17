@@ -10,7 +10,7 @@ from typing import AsyncGenerator, Awaitable, Callable
 from authlib.oauth2.rfc6749 import OAuth2Token
 
 from .base import BaseClient
-from .errors import ResponseException, UnsuportedArgumentsException
+from .errors import ResponseException, UnsuportedArgumentsException, client_error_handler
 
 _GET_THERMOSTATS_DATA_PATH = "/api/getthermostatsdata"
 _SET_SYSTEM_MODE_PATH = "/api/setsystemmode"
@@ -70,18 +70,19 @@ class ThermostatClient(BaseClient):
 
         data = {"device_type": _VAILLANT_DEVICE_TYPE}
 
-        resp = await self._client.post(
-            _GET_THERMOSTATS_DATA_PATH,
-            data=data,
-        )
+        with client_error_handler():
+            resp = await self._client.post(
+                _GET_THERMOSTATS_DATA_PATH,
+                data=data,
+            )
 
-        resp.raise_for_status()
-        body = resp.json()
+            resp.raise_for_status()
+            body = resp.json()
 
-        if body["status"] != _RESPONSE_STATUS_OK:
-            raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
+            if body["status"] != _RESPONSE_STATUS_OK:
+                raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
 
-        return [Device(**device) for device in body["body"]["devices"]]
+            return [Device(**device) for device in body["body"]["devices"]]
 
     async def async_set_system_mode(
         self, device_id: str, module_id: str, system_mode: SystemMode
@@ -98,16 +99,17 @@ class ThermostatClient(BaseClient):
             "system_mode": system_mode.value,
         }
 
-        resp = await self._client.post(
-            _SET_SYSTEM_MODE_PATH,
-            data=data,
-        )
+        with client_error_handler():
+            resp = await self._client.post(
+                _SET_SYSTEM_MODE_PATH,
+                data=data,
+            )
 
-        resp.raise_for_status()
-        body = resp.json()
+            resp.raise_for_status()
+            body = resp.json()
 
-        if body["status"] != _RESPONSE_STATUS_OK:
-            raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
+            if body["status"] != _RESPONSE_STATUS_OK:
+                raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
 
     async def async_set_minor_mode(
         self,
@@ -139,16 +141,17 @@ class ThermostatClient(BaseClient):
         if temp is not None:
             data["setpoint_temp"] = temp
 
-        resp = await self._client.post(
-            _SET_MINOR_MODE_PATH,
-            data=data,
-        )
+        with client_error_handler():
+            resp = await self._client.post(
+                _SET_MINOR_MODE_PATH,
+                data=data,
+            )
 
-        resp.raise_for_status()
-        body = resp.json()
+            resp.raise_for_status()
+            body = resp.json()
 
-        if body["status"] != _RESPONSE_STATUS_OK:
-            raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
+            if body["status"] != _RESPONSE_STATUS_OK:
+                raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
 
     def _get_setpoint_endtime(
         self, 
