@@ -1,6 +1,8 @@
 from datetime import datetime
 import pytest
 
+import httpx
+
 from .thermostat import Device, SetpointMode, SystemMode, thermostat_client
 from .errors import RequestClientException, UnsuportedArgumentsException
 
@@ -76,6 +78,22 @@ class TestThermostat:
             with pytest.raises(RequestClientException):
                 await client.async_get_thermostats_data()
 
+    async def test_async_get_thermostats_data__server_errors__retry_until_success(self, respx_mock):
+        respx_mock.post("https://api.netatmo.com/api/getthermostatsdata", data=get_thermostats_data_request).mock(side_effect=[
+            httpx.Response(500),
+            httpx.Response(200, json=get_thermostats_data_response),
+        ])
+
+        async with thermostat_client("", "", token, None) as client:
+            devices = await client.async_get_thermostats_data()
+
+            expected_devices = get_thermostats_data_response["body"]["devices"]
+
+            assert respx_mock.calls.call_count == 2
+            assert len(devices) == len(expected_devices)
+            for x in zip(devices, expected_devices):
+                assert x[0] == Device(**x[1])
+
     async def test_async_get_thermostats_data__valid_request_params__returns_valid_device_list(self, respx_mock):
         respx_mock.post("https://api.netatmo.com/api/getthermostatsdata", data=get_thermostats_data_request).respond(200, json=get_thermostats_data_response)
 
@@ -95,6 +113,17 @@ class TestThermostat:
             with pytest.raises(RequestClientException):
                 await client.async_set_system_mode(set_system_mode_request["device_id"], set_system_mode_request["module_id"], SystemMode.SUMMER)
 
+    async def test_async_set_system_mode__server_errors__retry_until_success(self, respx_mock):
+        respx_mock.post("https://api.netatmo.com/api/setsystemmode", data=set_system_mode_request).mock(side_effect=[
+            httpx.Response(500),
+            httpx.Response(200, json=set_system_mode_response),
+        ])
+
+        async with thermostat_client("", "", token, None) as client:
+            await client.async_set_system_mode(set_system_mode_request["device_id"], set_system_mode_request["module_id"], SystemMode.SUMMER)
+
+            assert respx_mock.calls.call_count == 2
+
     async def test_async_set_system_mode__valid_request_params__doesnt_raise_error(self, respx_mock):
         respx_mock.post("https://api.netatmo.com/api/setsystemmode", data=set_system_mode_request).respond(200, json=set_system_mode_response)
 
@@ -107,6 +136,22 @@ class TestThermostat:
         async with thermostat_client("", "", token, None) as client:
             with pytest.raises(RequestClientException):
                 await client.async_set_minor_mode(set_minor_mode_request["device_id"], set_minor_mode_request["module_id"], SetpointMode.AWAY, True)
+
+    async def test_async_set_minor_mode__server_errors__retry_until_success(self, respx_mock):
+        respx_mock.post("https://api.netatmo.com/api/setminormode", data=set_minor_mode_request).mock(side_effect=[
+            httpx.Response(500),
+            httpx.Response(200, json=set_minor_mode_response),
+        ])
+
+        async with thermostat_client("", "", token, None) as client:
+            await client.async_set_minor_mode(
+                set_minor_mode_request["device_id"],
+                set_minor_mode_request["module_id"],
+                SetpointMode.AWAY,
+                True,
+            )
+
+            assert respx_mock.calls.call_count == 2
 
     async def test_async_set_minor_mode__activate_manual_without_temp_and_endtime__raises_error(self):
         async with thermostat_client("", "", token, None) as client:

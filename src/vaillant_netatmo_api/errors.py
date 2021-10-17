@@ -89,6 +89,9 @@ def client_error_handler() -> Generator[None]:
             raise RequestException("Unknown response error. Check the log for more details.", e.request, e.response) from e
 
 def _sanitize_request(request: Request) -> dict:
+    if not request:
+        return None
+    
     return {
         "method": request.method,
         "url": request.url,
@@ -98,6 +101,9 @@ def _sanitize_request(request: Request) -> dict:
     }
 
 def _sanitize_response(response: Response) -> dict:
+    if not response:
+        return None
+
     return {
         "status_code": response.status_code,
         "url": response.url,
