@@ -1,4 +1,4 @@
-anyio==3.3.1
+anyio==3.3.4
 Authlib==1.0.0b1
 certifi==2021.5.30
 cffi==1.14.6
@@ -11,3 +11,4 @@ idna==3.2
 pycparser==2.20
 rfc3986==1.5.0
 sniffio==1.2.0
+tenacity==8.0.1
