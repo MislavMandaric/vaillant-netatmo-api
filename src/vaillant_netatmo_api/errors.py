@@ -92,7 +92,9 @@ def _sanitize_request(request: Request) -> dict:
     return {
         "method": request.method,
         "url": request.url,
-        "body": sub(r"access_token=\w+\|\w+", "access_token=<FILTERED>", request.content),
+        "body": sub(r"access_token\s*=\s*\w+\|\w+\s+", "access_token=<FILTERED>",
+                sub(r"password\s*=\s*.+\s+", "password=<FILTERED>", request.content)
+        ),
     }
 
 def _sanitize_response(response: Response) -> dict:
