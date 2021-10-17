@@ -8,9 +8,10 @@ from enum import Enum
 from typing import AsyncGenerator, Awaitable, Callable
 
 from authlib.oauth2.rfc6749 import OAuth2Token
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, stop_after_delay, wait_random_exponential
 
 from .base import BaseClient
-from .errors import BadResponseException, UnsuportedArgumentsException
+from .errors import ResponseException, RetryableException, UnsuportedArgumentsException, client_error_handler
 
 _GET_THERMOSTATS_DATA_PATH = "/api/getthermostatsdata"
 _SET_SYSTEM_MODE_PATH = "/api/setsystemmode"
@@ -61,6 +62,12 @@ class ThermostatClient(BaseClient):
             update_token=update_token,
         )
 
+    @retry(
+        retry=retry_if_exception_type(RetryableException),
+        stop=(stop_after_delay(300) | stop_after_attempt(10)),
+        wait=wait_random_exponential(multiplier=1, max=30),
+        reraise=True,
+    )
     async def async_get_thermostats_data(self) -> list[Device]:
         """
         Get thermostat data from the Netatmo API.
@@ -70,19 +77,26 @@ class ThermostatClient(BaseClient):
 
         data = {"device_type": _VAILLANT_DEVICE_TYPE}
 
-        resp = await self._client.post(
-            _GET_THERMOSTATS_DATA_PATH,
-            data=data,
-        )
+        with client_error_handler():
+            resp = await self._client.post(
+                _GET_THERMOSTATS_DATA_PATH,
+                data=data,
+            )
 
-        resp.raise_for_status()
-        body = resp.json()
+            resp.raise_for_status()
+            body = resp.json()
 
-        if body["status"] != _RESPONSE_STATUS_OK:
-            raise BadResponseException()
+            if body["status"] != _RESPONSE_STATUS_OK:
+                raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
 
-        return [Device(**device) for device in body["body"]["devices"]]
+            return [Device(**device) for device in body["body"]["devices"]]
 
+    @retry(
+        retry=retry_if_exception_type(RetryableException),
+        stop=(stop_after_delay(300) | stop_after_attempt(10)),
+        wait=wait_random_exponential(multiplier=1, max=30),
+        reraise=True,
+    )
     async def async_set_system_mode(
         self, device_id: str, module_id: str, system_mode: SystemMode
     ) -> None:
@@ -98,17 +112,24 @@ class ThermostatClient(BaseClient):
             "system_mode": system_mode.value,
         }
 
-        resp = await self._client.post(
-            _SET_SYSTEM_MODE_PATH,
-            data=data,
-        )
+        with client_error_handler():
+            resp = await self._client.post(
+                _SET_SYSTEM_MODE_PATH,
+                data=data,
+            )
 
-        resp.raise_for_status()
-        body = resp.json()
+            resp.raise_for_status()
+            body = resp.json()
 
-        if body["status"] != _RESPONSE_STATUS_OK:
-            raise BadResponseException()
+            if body["status"] != _RESPONSE_STATUS_OK:
+                raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
 
+    @retry(
+        retry=retry_if_exception_type(RetryableException),
+        stop=(stop_after_delay(300) | stop_after_attempt(10)),
+        wait=wait_random_exponential(multiplier=1, max=30),
+        reraise=True,
+    )
     async def async_set_minor_mode(
         self,
         device_id: str,
@@ -139,16 +160,17 @@ class ThermostatClient(BaseClient):
         if temp is not None:
             data["setpoint_temp"] = temp
 
-        resp = await self._client.post(
-            _SET_MINOR_MODE_PATH,
-            data=data,
-        )
+        with client_error_handler():
+            resp = await self._client.post(
+                _SET_MINOR_MODE_PATH,
+                data=data,
+            )
 
-        resp.raise_for_status()
-        body = resp.json()
+            resp.raise_for_status()
+            body = resp.json()
 
-        if body["status"] != _RESPONSE_STATUS_OK:
-            raise BadResponseException()
+            if body["status"] != _RESPONSE_STATUS_OK:
+                raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
 
     def _get_setpoint_endtime(
         self, 
@@ -158,16 +180,16 @@ class ThermostatClient(BaseClient):
     ) -> int | None:
         if not activate:
             if setpoint_endtime is not None:
-                raise UnsuportedArgumentsException()
+                raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
             return None
         else:
             if setpoint_endtime is None:
                 if setpoint_mode == SetpointMode.MANUAL or setpoint_mode == SetpointMode.HWB:
-                    raise UnsuportedArgumentsException()
+                    raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
                 return None
             else:
                 if setpoint_endtime <= datetime.now():
-                    raise UnsuportedArgumentsException()
+                    raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
                 return round(setpoint_endtime.timestamp())
 
     def _get_setpoint_temp(
@@ -178,16 +200,16 @@ class ThermostatClient(BaseClient):
     ) -> float | None:
         if not activate:
             if setpoint_temp is not None:
-                raise UnsuportedArgumentsException()
+                raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
             return None
         else:
             if setpoint_temp is None:
                 if setpoint_mode == SetpointMode.MANUAL:
-                    raise UnsuportedArgumentsException()
+                    raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
                 return None
             else:
                 if setpoint_mode != SetpointMode.MANUAL:
-                    raise UnsuportedArgumentsException()
+                    raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
                 return setpoint_temp
 
 

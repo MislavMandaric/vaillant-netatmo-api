@@ -53,7 +53,7 @@ async def async_call_api(token):
         d_id = devices[0].id
         m_id = devices[0].modules[0].id
 
-        await client.async_set_minor_mode(d_id, m_id, SetpointMode.MANUAL, False, setpoint_endtime=datetime.now()+timedelta(hours=1), setpoint_temp=12)
+        await client.async_set_minor_mode(d_id, m_id, SetpointMode.MANUAL, False)
     except Exception as e:
         print(e.response.text)
     finally:
