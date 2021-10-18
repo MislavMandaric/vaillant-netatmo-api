@@ -1,5 +1,6 @@
-from authlib.oauth2.rfc6749 import OAuth2Token
 import pytest
+
+from authlib.oauth2.rfc6749 import OAuth2Token
 
 from .token import deserialize_token, serialize_token
 
