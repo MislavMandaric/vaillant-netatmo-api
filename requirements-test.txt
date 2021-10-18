@@ -4,7 +4,7 @@ Authlib==1.0.0b1
 certifi==2021.10.8
 cffi==1.15.0
 charset-normalizer==2.0.7
-cryptography==3.4.8
+cryptography==35.0.0
 flake8==3.9.2
 h11==0.12.0
 httpcore==0.13.7
