@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.1 (2021-10-18)
+### Fix
+* Fixes sanitization of access token and password and adds tests to confirm ([`522441e`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/522441ec21e33a18644811039cfeeb181e6e5e6f))
+* Fixes sanitization of the access token ([`608e514`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/608e514ef1953d6507bb13ed28248a691e942c56))
+
 ## v0.2.0 (2021-10-17)
 ### Feature
 * Adds new retry policy to all requests with new library ([`23a48c1`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/23a48c1ec86e5bfd1358299eb45528b44d3bef40))
