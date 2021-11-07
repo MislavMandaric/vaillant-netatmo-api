@@ -9,6 +9,8 @@
 
 Python 3 library for managing Vaillant thermostats using the Netatmo API. It provides one-to-one mapping with Vaillant's Netatmo API and offeres similar functionality as the official Vaillant vSMART/eRELAX app.
 
+> NOTE: This library is still in a prerelease status and will be until v1.0.0. There might be breaking changes to the public API in any of the v0.x.y versions.
+
 ## Installation
 
 Library can be simply installed using pip.
