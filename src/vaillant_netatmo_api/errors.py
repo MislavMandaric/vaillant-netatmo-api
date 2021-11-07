@@ -4,13 +4,22 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from re import sub
-from typing import Any, Generator
+from typing import Generator
 
 from httpx import codes, HTTPStatusError, NetworkError, Request, Response, TimeoutException
 
 
 class UnsuportedArgumentsException(Exception):
     """Exception which is thrown when provided argument is not valid parameter of the method."""
+
+    def __init__(self, message: str, **kwargs) -> None:
+        self.params = f"{kwargs=}"
+
+        super().__init__(message, self.params)
+
+
+class NonOkResponseException(Exception):
+    """Exception which is thrown when server returns a valid HTTP response, but the request was not successfully handled and the response contains errors."""
 
     def __init__(self, message: str, **kwargs) -> None:
         self.params = f"{kwargs=}"
@@ -62,10 +71,6 @@ class RequestServerException(RetryableException):
 
 class RequestException(RetryableException):
     """Exception which is thrown when server returns any other non-2xx response."""
-
-
-class ResponseException(NonRetryableException):
-    """Exception which is thrown when server returns a valid HTTP response, but the request was not successfully handled and the response contains errors."""
 
 
 @contextmanager

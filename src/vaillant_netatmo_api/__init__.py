@@ -3,7 +3,7 @@
 from .auth import AuthClient, auth_client
 from .errors import (
     ApiException,
-    ResponseException,
+    NonOkResponseException,
     NetworkException,
     NetworkTimeoutException,
     NonRetryableException,
@@ -25,13 +25,13 @@ from .thermostat import (
     ThermostatClient,
     thermostat_client,
 )
-from .token import deserialize_token, serialize_token
+from .token import Token, TokenStore
 
 __all__ = [
     "AuthClient",
     "ThermostatClient",
     "ApiException",
-    "ResponseException",
+    "NonOkResponseException",
     "NetworkException",
     "NetworkTimeoutException",
     "NonRetryableException",
@@ -48,8 +48,8 @@ __all__ = [
     "Measured",
     "SystemMode",
     "SetpointMode",
+    "Token",
+    "TokenStore",
     "auth_client",
     "thermostat_client",
-    "serialize_token",
-    "deserialize_token",
 ]

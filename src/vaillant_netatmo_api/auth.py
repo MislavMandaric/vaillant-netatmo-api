@@ -3,27 +3,31 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Callable
 
-from authlib.oauth2.rfc6749 import OAuth2Token
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, stop_after_delay, wait_random_exponential
+from httpx import AsyncClient
 
 from .base import BaseClient
-from .errors import RetryableException, client_error_handler
+from .token import Token, TokenStore
+
+_TOKEN_PATH = "oauth2/token"
 
 
 @asynccontextmanager
 async def auth_client(
     client_id: str,
     client_secret: str,
-    scope: str,
+    on_token_update: Callable[[Token], None],
 ) -> AsyncGenerator[AuthClient, None]:
-    client = AuthClient(client_id, client_secret, scope)
+    client = AsyncClient()
+    token_store = TokenStore(client_id, client_secret, None, on_token_update)
+    
+    c = AuthClient(client, token_store)
 
     try:
-        yield client
+        yield c
     finally:
-        await client.async_close()
+        await client.aclose()
 
 class AuthClient(BaseClient):
     """
@@ -34,45 +38,42 @@ class AuthClient(BaseClient):
 
     def __init__(
         self,
-        client_id: str,
-        client_secret: str,
-        scope: str,
+        client: AsyncClient,
+        token_store: TokenStore,
     ) -> None:
         """
         Create new auth client instance.
 
-        Uses the provided parameters to instantiate the underlying AsyncOAuth2Client client from the BaseClient class.
+        Uses the provided parameters to instantiate the BaseClient class.
         """
 
-        super().__init__(
-            client_id,
-            client_secret,
-            scope=scope,
-        )
+        self._token_store = token_store
+        super().__init__(client, None)
 
-    @retry(
-        retry=retry_if_exception_type(RetryableException),
-        stop=(stop_after_delay(300) | stop_after_attempt(10)),
-        wait=wait_random_exponential(multiplier=1, max=30),
-        reraise=True,
-    )
-    async def async_get_token(
+    async def async_token(
         self,
         username: str,
         password: str,
         user_prefix: str,
         app_version: str,
-    ) -> OAuth2Token:
+    ) -> None:
         """
         Get the access and refresh tokens from the Netatmo API which can be used for making requests towards all other protected APIs. Uses the resource owner password credentials grant, with custom Vaillant parameters - user prefix and app version.
 
-        Returns an OAuth token object containing access and refresh tokens.
+        On success, returns nothing. On error, throws an exception.
         """
 
-        with client_error_handler():
-            return await self._client.fetch_token(
-                username=username,
-                password=password,
-                user_prefix=user_prefix,
-                app_version=app_version,
-            )
+        data = {
+            "username": username,
+            "password": password,
+            "user_prefix": user_prefix,
+            "app_version": app_version,
+        }
+        data.update(self._token_store.access_token_request)
+
+        body = await self._post(
+            _TOKEN_PATH,
+            data=data,
+        )
+
+        self._token_store.token = Token(body)
