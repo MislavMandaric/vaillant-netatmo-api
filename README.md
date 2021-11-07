@@ -41,7 +41,7 @@ def handle_token_update(token):
     token_string = token.serialize()
     write_to_storage(token_string)
 
-with auth_client(CLIENT_ID, CLIENT_SECRET, handle_token_update) as client:
+async with auth_client(CLIENT_ID, CLIENT_SECRET, handle_token_update) as client:
     await client.async_token(
         username,
         password,
@@ -71,7 +71,7 @@ def handle_token_update(token):
     token_string = token.serialize()
     write_to_storage(token_string)
 
-with thermostat_client(CLIENT_ID, CLIENT_SECRET, token, handle_token_update) as client:
+async with thermostat_client(CLIENT_ID, CLIENT_SECRET, token, handle_token_update) as client:
     devices = await client.async_get_thermostats_data()
 
     d_id = devices[0].id
