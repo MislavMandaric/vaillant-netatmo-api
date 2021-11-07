@@ -3,7 +3,7 @@
 from .auth import AuthClient, auth_client
 from .errors import (
     ApiException,
-    ResponseException,
+    NonOkResponseException,
     NetworkException,
     NetworkTimeoutException,
     NonRetryableException,
@@ -31,7 +31,7 @@ __all__ = [
     "AuthClient",
     "ThermostatClient",
     "ApiException",
-    "ResponseException",
+    "NonOkResponseException",
     "NetworkException",
     "NetworkTimeoutException",
     "NonRetryableException",

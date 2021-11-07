@@ -10,7 +10,7 @@ from typing import AsyncGenerator, Callable
 from httpx import AsyncClient
 
 from .base import BaseClient
-from .errors import ResponseException, UnsuportedArgumentsException
+from .errors import NonOkResponseException, UnsuportedArgumentsException
 from .thermostat_auth import ThermostatAuth
 from .token import Token, TokenStore
 
@@ -66,15 +66,16 @@ class ThermostatClient(BaseClient):
         On success, returns a list of thermostat devices with their modules. On error, throws an exception.
         """
 
+        path = _GET_THERMOSTATS_DATA_PATH
         data = {"device_type": _VAILLANT_DEVICE_TYPE}
 
         body = await self._post(
-            _GET_THERMOSTATS_DATA_PATH,
+            path,
             data=data,
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
+            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
 
         return [Device(**device) for device in body["body"]["devices"]]
 
@@ -87,6 +88,7 @@ class ThermostatClient(BaseClient):
         On success, returns nothing. On error, throws an exception.
         """
 
+        path = _SET_SYSTEM_MODE_PATH
         data = {
             "device_id": device_id,
             "module_id": module_id,
@@ -94,12 +96,12 @@ class ThermostatClient(BaseClient):
         }
 
         body = await self._post(
-            _SET_SYSTEM_MODE_PATH,
+            path,
             data=data,
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
+            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
 
     async def async_set_minor_mode(
         self,
@@ -116,6 +118,7 @@ class ThermostatClient(BaseClient):
         On success, returns nothing. On error, throws an exception.
         """
 
+        path = _SET_MINOR_MODE_PATH
         data = {
             "device_id": device_id,
             "module_id": module_id,
@@ -132,12 +135,12 @@ class ThermostatClient(BaseClient):
             data["setpoint_temp"] = temp
 
         body = await self._post(
-            _SET_MINOR_MODE_PATH,
+            path,
             data=data,
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
+            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
 
     def _get_setpoint_endtime(
         self, 

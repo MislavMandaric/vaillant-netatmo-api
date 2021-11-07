@@ -18,6 +18,15 @@ class UnsuportedArgumentsException(Exception):
         super().__init__(message, self.params)
 
 
+class NonOkResponseException(Exception):
+    """Exception which is thrown when server returns a valid HTTP response, but the request was not successfully handled and the response contains errors."""
+
+    def __init__(self, message: str, **kwargs) -> None:
+        self.params = f"{kwargs=}"
+
+        super().__init__(message, self.params)
+
+
 class ApiException(Exception):
     """Base class for all exceptions related to networking."""
 
@@ -62,10 +71,6 @@ class RequestServerException(RetryableException):
 
 class RequestException(RetryableException):
     """Exception which is thrown when server returns any other non-2xx response."""
-
-
-class ResponseException(NonRetryableException):
-    """Exception which is thrown when server returns a valid HTTP response, but the request was not successfully handled and the response contains errors."""
 
 
 @contextmanager
