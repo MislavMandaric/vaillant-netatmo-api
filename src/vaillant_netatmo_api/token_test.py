@@ -1,37 +1,68 @@
 import pytest
+from time import time
 
-from authlib.oauth2.rfc6749 import OAuth2Token
-
-from .token import deserialize_token, serialize_token
+from .token import Token
 
 
 @pytest.mark.asyncio
 class TestToken:
-    async def test_serialize_token__json_object__returns_json_string(self):
-        token = OAuth2Token.from_dict({
+    async def test_serialize__json_token_object__returns_json_string(self):
+        token = Token({
             "access_token": "12345",
             "refresh_token": "abcde",
-            "expires_at": "",
+            "expires_at": 12,
             "expires_in": ""
         })
 
-        expected_json = '{"access_token": "12345", "refresh_token": "abcde", "expires_at": "", "expires_in": ""}'
+        expected_json = '{"access_token": "12345", "refresh_token": "abcde", "expires_at": 12}'
 
-        json = serialize_token(token)
+        json = token.serialize()
 
         assert json == expected_json
 
-    async def test_deserialize_token__json_string__returns_json_oauth_object(self):
-        json = '{"access_token": "12345", "refresh_token": "abcde", "expires_at": "", "expires_in": ""}'
+    async def test_deserialize__json_string__returns_json_token_object(self):
+        json = '{"access_token": "12345", "refresh_token": "abcde", "expires_at": 12}'
         
-        expected_token = OAuth2Token.from_dict({
+        expected_token = Token({
             "access_token": "12345",
             "refresh_token": "abcde",
-            "expires_at": "",
-            "expires_in": ""
+            "expires_at": 12,
         })
 
-        token = deserialize_token(json)
+        token = Token.deserialize(json)
 
-        assert isinstance(token, OAuth2Token)
+        assert isinstance(token, Token)
         assert token == expected_token
+
+    async def test_is_expired__invalid_token__returns_true(self):
+        token = Token({
+            "access_token": "12345",
+            "refresh_token": "abcde",
+            "expires_at": "invalid",
+        })
+
+        is_expired = token.is_expired
+
+        assert is_expired == True
+
+    async def test_is_expired__expired_token__returns_true(self):
+        token = Token({
+            "access_token": "12345",
+            "refresh_token": "abcde",
+            "expires_at": int(time()) - 1000,
+        })
+
+        is_expired = token.is_expired
+
+        assert is_expired == True
+
+    async def test_is_expired__non_expired_token__returns_false(self):
+        token = Token({
+            "access_token": "12345",
+            "refresh_token": "abcde",
+            "expires_at": int(time()) + 1000,
+        })
+
+        is_expired = token.is_expired
+
+        assert is_expired == False

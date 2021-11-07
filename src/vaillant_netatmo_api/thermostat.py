@@ -5,17 +5,18 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from datetime import datetime
 from enum import Enum
-from typing import AsyncGenerator, Awaitable, Callable
+from typing import AsyncGenerator, Callable
 
-from authlib.oauth2.rfc6749 import OAuth2Token
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, stop_after_delay, wait_random_exponential
+from httpx import AsyncClient
 
 from .base import BaseClient
-from .errors import ResponseException, RetryableException, UnsuportedArgumentsException, client_error_handler
+from .errors import ResponseException, UnsuportedArgumentsException
+from .thermostat_auth import ThermostatAuth
+from .token import Token, TokenStore
 
-_GET_THERMOSTATS_DATA_PATH = "/api/getthermostatsdata"
-_SET_SYSTEM_MODE_PATH = "/api/setsystemmode"
-_SET_MINOR_MODE_PATH = "/api/setminormode"
+_GET_THERMOSTATS_DATA_PATH = "api/getthermostatsdata"
+_SET_SYSTEM_MODE_PATH = "api/setsystemmode"
+_SET_MINOR_MODE_PATH = "api/setminormode"
 _VAILLANT_DEVICE_TYPE = "NAVaillant"
 _RESPONSE_STATUS_OK = "ok"
 _SETPOINT_DEFAULT_DURATION_MINS = 120
@@ -25,15 +26,18 @@ _SETPOINT_DEFAULT_DURATION_MINS = 120
 async def thermostat_client(
     client_id: str,
     client_secret: str,
-    token: OAuth2Token,
-    update_token: Callable[[OAuth2Token, str | None, str | None], Awaitable[None]],
+    token: Token,
+    on_token_update: Callable[[Token], None],
 ) -> AsyncGenerator[ThermostatClient, None]:
-    client = ThermostatClient(client_id, client_secret, token, update_token)
+    client = AsyncClient()
+    token_store = TokenStore(client_id, client_secret, token, on_token_update)
+    
+    c = ThermostatClient(client, token_store)
 
     try:
-        yield client
+        yield c
     finally:
-        await client.async_close()
+        await client.aclose()
 
 class ThermostatClient(BaseClient):
     """
@@ -44,30 +48,17 @@ class ThermostatClient(BaseClient):
 
     def __init__(
         self,
-        client_id: str,
-        client_secret: str,
-        token: OAuth2Token,
-        update_token: Callable[[OAuth2Token, str | None, str | None], Awaitable[None]],
+        client: AsyncClient,
+        token_store: TokenStore,
     ) -> None:
         """
         Create new thermostat client instance.
 
-        Uses the provided parameters to instantiate the underlying AsyncOAuth2Client client from the BaseClient class.
+        Uses the provided parameters to instantiate the BaseClient class.
         """
 
-        super().__init__(
-            client_id,
-            client_secret,
-            token=token,
-            update_token=update_token,
-        )
+        super().__init__(client, ThermostatAuth(token_store))
 
-    @retry(
-        retry=retry_if_exception_type(RetryableException),
-        stop=(stop_after_delay(300) | stop_after_attempt(10)),
-        wait=wait_random_exponential(multiplier=1, max=30),
-        reraise=True,
-    )
     async def async_get_thermostats_data(self) -> list[Device]:
         """
         Get thermostat data from the Netatmo API.
@@ -77,26 +68,16 @@ class ThermostatClient(BaseClient):
 
         data = {"device_type": _VAILLANT_DEVICE_TYPE}
 
-        with client_error_handler():
-            resp = await self._client.post(
-                _GET_THERMOSTATS_DATA_PATH,
-                data=data,
-            )
+        body = await self._post(
+            _GET_THERMOSTATS_DATA_PATH,
+            data=data,
+        )
 
-            resp.raise_for_status()
-            body = resp.json()
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
 
-            if body["status"] != _RESPONSE_STATUS_OK:
-                raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
+        return [Device(**device) for device in body["body"]["devices"]]
 
-            return [Device(**device) for device in body["body"]["devices"]]
-
-    @retry(
-        retry=retry_if_exception_type(RetryableException),
-        stop=(stop_after_delay(300) | stop_after_attempt(10)),
-        wait=wait_random_exponential(multiplier=1, max=30),
-        reraise=True,
-    )
     async def async_set_system_mode(
         self, device_id: str, module_id: str, system_mode: SystemMode
     ) -> None:
@@ -112,24 +93,14 @@ class ThermostatClient(BaseClient):
             "system_mode": system_mode.value,
         }
 
-        with client_error_handler():
-            resp = await self._client.post(
-                _SET_SYSTEM_MODE_PATH,
-                data=data,
-            )
+        body = await self._post(
+            _SET_SYSTEM_MODE_PATH,
+            data=data,
+        )
 
-            resp.raise_for_status()
-            body = resp.json()
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
 
-            if body["status"] != _RESPONSE_STATUS_OK:
-                raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
-
-    @retry(
-        retry=retry_if_exception_type(RetryableException),
-        stop=(stop_after_delay(300) | stop_after_attempt(10)),
-        wait=wait_random_exponential(multiplier=1, max=30),
-        reraise=True,
-    )
     async def async_set_minor_mode(
         self,
         device_id: str,
@@ -160,17 +131,13 @@ class ThermostatClient(BaseClient):
         if temp is not None:
             data["setpoint_temp"] = temp
 
-        with client_error_handler():
-            resp = await self._client.post(
-                _SET_MINOR_MODE_PATH,
-                data=data,
-            )
+        body = await self._post(
+            _SET_MINOR_MODE_PATH,
+            data=data,
+        )
 
-            resp.raise_for_status()
-            body = resp.json()
-
-            if body["status"] != _RESPONSE_STATUS_OK:
-                raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise ResponseException("Unknown response error. Check the log for more details.", resp.request, resp)
 
     def _get_setpoint_endtime(
         self, 
@@ -239,7 +206,7 @@ class Device:
         self.setpoint_hwb = Setpoint(**setpoint_hwb)
         self.modules = [Module(**module) for module in modules]
 
-    def __eq__(self, other):
+    def __eq__(self, other: Device):
         if (not isinstance(other, Device)):
             return False
         
@@ -274,7 +241,7 @@ class Module:
         self.setpoint_manual = Setpoint(**setpoint_manual)
         self.measured = Measured(**measured)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Module):
         if (not isinstance(other, Module)):
             return False
         

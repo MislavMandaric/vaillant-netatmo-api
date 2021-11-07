@@ -17,9 +17,9 @@ Library can be simply installed using pip.
 pip install vaillant-netatmo-api
 ```
 
-Library requires Python 3 and has [authlib](https://github.com/lepture/authlib) and [httpx](https://github.com/encode/httpx) dependencies.
+Library requires Python 3 and has [tenacity](https://github.com/jd/tenacity) and [httpx](https://github.com/encode/httpx) dependencies.
 
-> NOTE: Both authlib and httpx are prerelease software. The versions outlined in the `requirements.txt` should be working properly, but if there are some breaking changes, please check their Github issue tracker for known issues.
+> NOTE: httpx is currently a prerelease software. The version outlined in the `requirements.txt` should be working properly, but if there are some breaking changes, please check their Github issue tracker for known issues.
 
 ## Usage
 
@@ -29,25 +29,25 @@ All Netatmo APIs are protected and require a bearer token to authenticate. To ge
 
 Since Vaillant uses Resource Owner Password Credentials Grant, there is only one method in the `AuthClient` API:
 
-* `async_get_token`: getting a bearer token
+* `async_token`: getting a bearer token and storing it in the token store
 
 ```python
-from vaillant_netatmo_api import serialize_token, auth_client
+from vaillant_netatmo_api import auth_client
 
 CLIENT_ID = ""
 CLIENT_SECRET = ""
-SCOPE = ""
 
-with auth_client(CLIENT_ID, CLIENT_SECRET, SCOPE) as client:
-    token = await client.async_get_token(
+def handle_token_update(token):
+    token_string = token.serialize()
+    write_to_storage(token_string)
+
+with auth_client(CLIENT_ID, CLIENT_SECRET, handle_token_update) as client:
+    await client.async_token(
         username,
         password,
         user_prefix,
         app_version,
     )
-
-    token_string = serialize_token(token)
-    write_to_storage(token_string)
 ```
 
 ### Accessing the Thermostat API
@@ -59,19 +59,19 @@ There are three APIs available for the `ThermostatClient`, all of which require 
 * `async_set_minor_mode`: changing minor mode for a device and module (ie. manual mode, away mode or hot water boost mode)
 
 ```python
-from vaillant_netatmo_api import deserialize_token, thermostat_client, SystemMode
+from vaillant_netatmo_api import thermostat_client, SystemMode, Token
 
 CLIENT_ID = ""
 CLIENT_SECRET = ""
 
 token_string = read_from_storage()
-token = deserialize_token(token_string)
+token = Token.deserialize(token_string)
 
-def update_token(token, access_token, refresh_token):
-    token_string = serialize_token(token)
+def handle_token_update(token):
+    token_string = token.serialize()
     write_to_storage(token_string)
 
-with thermostat_client(CLIENT_ID, CLIENT_SECRET, token, update_token) as client:
+with thermostat_client(CLIENT_ID, CLIENT_SECRET, token, handle_token_update) as client:
     devices = await client.async_get_thermostats_data()
 
     d_id = devices[0].id
@@ -86,21 +86,22 @@ Even though library offers context manager for using `AuthClient` and `Thermosta
 
 Both of the clients use `httpx.AsyncClient` as the underlying HTTP communication library, which implements connection pooling and connection reuse. This means doing multiple concurent requests should be done by using the same instance of the `AuthClient` or `ThermostatClient`, which is not possible by using the context manager API since this API will return new instance of the client every time `auth_client` or `thermostat_client` method is called.
 
-To achieve optimal usage, which will utilize connection pooling and connection reuse, both `AuthClient` and `ThermostatClient` should be used either as singletons in the application, or with some other context management mechanism, with the context wider than one block of code or one inbound request.
+To achieve optimal usage, which will utilize connection pooling and connection reuse, both `AuthClient` and `ThermostatClient` should be used by instantiating the clients and providing `httpx.AsyncClient` instance in a constructor. This provided client should be used as singleton, or with some other context management mechanism, with the context wider than one block of code or one inbound request.
 
 Here is an example for usage in Home Assistant.
 
 ```python
 # When setting up integration with all the devices of one account, instantiate and store the client in a configuration memory store
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    client = ThermostatClient(
+    client = get_async_client(hass)
+    token_store = TokenStore(
         entry.data[CONF_CLIENT_ID],
         entry.data[CONF_CLIENT_SECRET],
         token,
-        async_token_updater,
+        handle_token_update,
     )
 
-    hass.data[DOMAIN][entry.entry_id] = client
+    hass.data[DOMAIN][entry.entry_id] = ThermostatClient(client, token_store)
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -109,13 +110,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        client: ThermostatClient = hass.data[DOMAIN].pop(entry.entry_id)
-        await client.async_close()
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 ```
 
-Similar hooks which represent some kind of application context should be used when integrating this library into a differnt application (Flask, Django or similar).
+Similar hooks which represent some kind of application context should be used when integrating this library into a different application (Flask, Django or similar).
 
 ## Acknowledgements
 

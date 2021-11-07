@@ -2,54 +2,55 @@
 
 from __future__ import annotations
 
-from typing import Awaitable, Callable
+from httpx import AsyncClient, Auth
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, stop_after_delay, wait_random_exponential
 
-from authlib.integrations.httpx_client import AsyncOAuth2Client
-from authlib.oauth2.rfc6749 import OAuth2Token
+from .errors import RetryableException, client_error_handler
 
-_API_HOST = "https://api.netatmo.com"
-_TOKEN_PATH = "/oauth2/token"
-_TOKEN_AUTH_METHOD = "client_secret_post"
-_TOKEN_PLACEMENT = "body"
+_API_HOST = "https://api.netatmo.com/"
 
 
 class BaseClient:
     """
     Base client for making HTTP requests to the Netatmo API.
 
-    Uses AsyncOAuth2Client from authlib in the background to make authenticated requests. Should be used either as a singleton for making all requests to allow underlying httpx client to efficiently manage connection pool. Because of that, expected usage is to instantiate a client and store it in memory for the duration of the application that is using it. On application termination, the client should be gracefully shut down using the provioded async_close method, which will allow all pending requests to finish.
+    Uses the constructor provided AsyncClient and Auth from httpx to make authenticated requests. The provided AsyncClient should be used as a singleton for making all requests to allow efficient connection pool management.
     """
 
     def __init__(
         self,
-        client_id: str,
-        client_secret: str,
-        scope: str | None = None,
-        token: OAuth2Token | None = None,
-        update_token: Callable[
-            [OAuth2Token, str | None, str | None], Awaitable[None]
-        ] = None,
+        client: AsyncClient,
+        auth: Auth,
     ) -> None:
         """
         Create new base client instance.
 
-        Uses the provided parameters to instantiate the underlying AsyncOAuth2Client client.
+        Uses the provided parameters when making API calls towards the Netatmo API.
         """
 
-        self._client = AsyncOAuth2Client(
-            client_id,
-            client_secret,
-            scope=scope,
-            token=token,
-            update_token=update_token,
-            token_endpoint=_TOKEN_PATH,
-            token_endpoint_auth_method=_TOKEN_AUTH_METHOD,
-            token_placement=_TOKEN_PLACEMENT,
-            base_url=_API_HOST,
-            timeout=15.0,
-        )
+        self._client = client
+        self._auth = auth
 
-    async def async_close(self) -> None:
-        """Close the underlying AsyncOAuth2Client client, allowing pending requests to finish."""
+    @retry(
+        retry=retry_if_exception_type(RetryableException),
+        stop=(stop_after_delay(300) | stop_after_attempt(10)),
+        wait=wait_random_exponential(multiplier=1, max=30),
+        reraise=True,
+    )
+    async def _post(self, path: str, data: dict) -> dict:
+        """
+        Makes post request using the underlying httpx AsyncClient, with the defaut timeout of 15s.
+        
+        In case of retryable exceptions, requests are retryed for up to 10 times or 5 minutes.
+        """
 
-        await self._client.aclose()
+        with client_error_handler():
+            resp = await self._client.post(
+                f"{_API_HOST}{path}",
+                data=data,
+                auth=self._auth,
+                timeout=15.0,
+            )
+
+            resp.raise_for_status()
+            return resp.json()

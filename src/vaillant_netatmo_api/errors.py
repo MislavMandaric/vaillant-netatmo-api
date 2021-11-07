@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from re import sub
-from typing import Any, Generator
+from typing import Generator
 
 from httpx import codes, HTTPStatusError, NetworkError, Request, Response, TimeoutException
 
