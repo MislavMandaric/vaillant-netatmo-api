@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.0 (2021-11-07)
+### Feature
+* Removes authlib and refactors library to accept httpx client as a dependency ([`1309a2a`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/1309a2a0a5a358d3ebcedbcdc16fe855e9cfe9a8))
+
+### Fix
+* Fixes logging of non-ok response exceptions ([`d758d74`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/d758d7480c08bf01d6b1c26b7c98837b363f3c62))
+
 ## v0.2.1 (2021-10-18)
 ### Fix
 * Fixes sanitization of access token and password and adds tests to confirm ([`522441e`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/522441ec21e33a18644811039cfeeb181e6e5e6f))
