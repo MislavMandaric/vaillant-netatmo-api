@@ -229,6 +229,7 @@ class Module:
         type: str = "",
         module_name: str = "",
         firmware: int = 0,
+        battery_percent: int = 0,
         setpoint_away: dict = {},
         setpoint_manual: dict = {},
         measured: dict = {},
@@ -240,6 +241,7 @@ class Module:
         self.type = type
         self.module_name = module_name
         self.firmware = firmware
+        self.battery_percent = battery_percent
         self.setpoint_away = Setpoint(**setpoint_away)
         self.setpoint_manual = Setpoint(**setpoint_manual)
         self.measured = Measured(**measured)
@@ -251,7 +253,8 @@ class Module:
         return self.id == other.id and \
             self.type == other.type and \
             self.module_name == other.module_name and \
-            self.firmware == other.firmware
+            self.firmware == other.firmware and \
+            self.battery_percent == other.battery_percent
 
 
 class Setpoint:

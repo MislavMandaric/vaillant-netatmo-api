@@ -42,6 +42,7 @@ get_thermostats_data_response = {
                         "type": "type",
                         "module_name": "module_name",
                         "firmware": "firmware",
+                        "battery_percent": 80,
                         "setpoint_away": {"setpoint_activate": False},
                         "setpoint_manual": {"setpoint_activate": False},
                         "measured": {"temperature": 25, "setpoint_temp": 26, "est_setpoint_temp": 27},
