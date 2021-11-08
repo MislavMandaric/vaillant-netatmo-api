@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.0 (2021-11-08)
+### Feature
+* Adds reading battery level percentage from the API ([`12935df`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/12935df1bb37cdf29ee795eb2d6ccaaf2835ebcd))
+
 ## v0.3.0 (2021-11-07)
 ### Feature
 * Removes authlib and refactors library to accept httpx client as a dependency ([`1309a2a`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/1309a2a0a5a358d3ebcedbcdc16fe855e9cfe9a8))
