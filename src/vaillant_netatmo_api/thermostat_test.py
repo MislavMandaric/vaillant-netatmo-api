@@ -5,7 +5,7 @@ from respx import MockRouter
 import httpx
 
 from .errors import RequestClientException, UnsuportedArgumentsException
-from .thermostat import Device, SetpointMode, SystemMode, thermostat_client
+from .thermostat import Device, SetpointMode, SystemMode, TimeSlot, Zone, thermostat_client
 from .token import Token
 
 token = Token({
@@ -45,6 +45,15 @@ get_thermostats_data_response = {
                         "battery_percent": 80,
                         "setpoint_away": {"setpoint_activate": False},
                         "setpoint_manual": {"setpoint_activate": False},
+                        "therm_program_list": [
+                            {
+                                "zones": [{"type": 0, "temp": 20, "id": 0, "hw": True}],
+                                "timetable": [{"id": 0, "m_offset": 0}],
+                                "program_id": "program_id",
+                                "name": "name",
+                                "selected": True,
+                            }
+                        ],
                         "measured": {"temperature": 25, "setpoint_temp": 26, "est_setpoint_temp": 27},
                     }
                 ]
@@ -73,6 +82,20 @@ set_minor_mode_request = {
 }
 
 set_minor_mode_response = {
+    "status": "ok",
+}
+
+sync_schedule_request = {
+    "device_id": "device",
+    "module_id": "module",
+    "schedule_id": "program_id",
+    "name": "name",
+    "zones": "[{\"id\": 0, \"type\": 0, \"temp\": 20, \"hw\": true}]",
+    "timetable": "[{\"id\": 0, \"m_offset\": 0}]",
+    "access_token": "12345",
+}
+
+sync_schedule_response = {
     "status": "ok",
 }
 
@@ -551,4 +574,49 @@ class TestThermostat:
                 set_minor_mode_request["module_id"],
                 SetpointMode.HWB,
                 False,
+            )
+
+    async def test_async_sync_schedule__invalid_request_params__raises_error(self, respx_mock: MockRouter):
+        respx_mock.post("https://api.netatmo.com/api/syncschedule", data=sync_schedule_request).respond(400)
+
+        async with thermostat_client("", "", token, None) as client:
+            with pytest.raises(RequestClientException):
+                await client.async_sync_schedule(
+                    sync_schedule_request["device_id"],
+                    sync_schedule_request["module_id"],
+                    sync_schedule_request["schedule_id"],
+                    sync_schedule_request["name"],
+                    [Zone(**{"type": 0, "temp": 20, "id": 0, "hw": True})],
+                    [TimeSlot(**{"id": 0, "m_offset": 0})],
+                )
+
+    async def test_async_sync_schedule__server_errors__retry_until_success(self, respx_mock: MockRouter):
+        respx_mock.post("https://api.netatmo.com/api/syncschedule", data=sync_schedule_request).mock(side_effect=[
+            httpx.Response(500),
+            httpx.Response(200, json=sync_schedule_response),
+        ])
+
+        async with thermostat_client("", "", token, None) as client:
+            await client.async_sync_schedule(
+                sync_schedule_request["device_id"],
+                sync_schedule_request["module_id"],
+                sync_schedule_request["schedule_id"],
+                sync_schedule_request["name"],
+                [Zone(**{"type": 0, "temp": 20, "id": 0, "hw": True})],
+                [TimeSlot(**{"id": 0, "m_offset": 0})],
+            )
+
+            assert respx_mock.calls.call_count == 2
+
+    async def test_async_sync_schedule__valid_request_params__doesnt_raise_error(self, respx_mock: MockRouter):
+        respx_mock.post("https://api.netatmo.com/api/syncschedule", data=sync_schedule_request).respond(200, json=sync_schedule_response)
+
+        async with thermostat_client("", "", token, None) as client:
+            await client.async_sync_schedule(
+                sync_schedule_request["device_id"],
+                sync_schedule_request["module_id"],
+                sync_schedule_request["schedule_id"],
+                sync_schedule_request["name"],
+                [Zone(**{"type": 0, "temp": 20, "id": 0, "hw": True})],
+                [TimeSlot(**{"id": 0, "m_offset": 0})],
             )
