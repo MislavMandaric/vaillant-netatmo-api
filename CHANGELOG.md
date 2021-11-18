@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.5.0 (2021-11-18)
+### Feature
+* Tests for the sync schedule method ([`ae893a8`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/ae893a87caa9f955aa9e7e870eca2b964930d189))
+* Adds sync schedule api which updates the existing schedule of a thermostat ([`bad39e7`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/bad39e706c7650e15e9c7975002cc47b4a168bea))
+* Adds mapping of therm_program_list api response ([`af4a8a4`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/af4a8a42e604a389f1e4924f135697c94cfd8f9f))
+
 ## v0.4.0 (2021-11-08)
 ### Feature
 * Adds reading battery level percentage from the API ([`12935df`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/12935df1bb37cdf29ee795eb2d6ccaaf2835ebcd))
