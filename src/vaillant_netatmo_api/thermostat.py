@@ -150,8 +150,8 @@ class ThermostatClient(BaseClient):
         module_id: str,
         schedule_id: str,
         name: str,
-        timetable: list[TimeSlot],
         zones: list[Zone],
+        timetable: list[TimeSlot],
     ) -> None:
         """
         Change thermostat's schedule, by providing all the data for the given schedule. The method upserts all the schedule data, it
@@ -166,16 +166,16 @@ class ThermostatClient(BaseClient):
             "module_id": module_id,
             "schedule_id": schedule_id,
             "name": name,
-            "timetable": json.dumps([{
-                    "id": time_slot.id,
-                    "m_offset": time_slot.m_offset,
-                } for time_slot in timetable]),
             "zones": json.dumps([{
                     "id": zone.id,
                     "type": zone.type,
                     "temp": zone.temp,
                     "hw": zone.hw,
                 } for zone in zones]),
+            "timetable": json.dumps([{
+                    "id": time_slot.id,
+                    "m_offset": time_slot.m_offset,
+                } for time_slot in timetable]),
         }
 
         body = await self._post(
@@ -334,6 +334,7 @@ class Zone:
         type: int = 0,
         temp: float = 0.0,
         hw: bool = False,
+        **kwargs,
     ) -> None:
         """Create new zone attribute."""
 
@@ -350,6 +351,7 @@ class TimeSlot:
         self,
         id: int | None = None,
         m_offset: int = 0,
+        **kwargs,
     ) -> None:
         """Create new time slot attribute."""
 
