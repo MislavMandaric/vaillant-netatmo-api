@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from datetime import datetime
 from enum import Enum
+import json
 from typing import AsyncGenerator, Callable
 
 from httpx import AsyncClient
@@ -17,6 +18,7 @@ from .token import Token, TokenStore
 _GET_THERMOSTATS_DATA_PATH = "api/getthermostatsdata"
 _SET_SYSTEM_MODE_PATH = "api/setsystemmode"
 _SET_MINOR_MODE_PATH = "api/setminormode"
+_SYNC_SCHEDULE_PATH = "api/syncschedule"
 _VAILLANT_DEVICE_TYPE = "NAVaillant"
 _RESPONSE_STATUS_OK = "ok"
 _SETPOINT_DEFAULT_DURATION_MINS = 120
@@ -142,6 +144,48 @@ class ThermostatClient(BaseClient):
         if body["status"] != _RESPONSE_STATUS_OK:
             raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
 
+    async def async_sync_schedule(
+        self,
+        device_id: str,
+        module_id: str,
+        schedule_id: str,
+        name: str,
+        timetable: list[TimeSlot],
+        zones: list[Zone],
+    ) -> None:
+        """
+        Change thermostat's schedule, by providing all the data for the given schedule. The method upserts all the schedule data, it
+        does not diff the data. The suggested usage is to always read the schedule first and provide the changed schedule in full back.
+
+        On success, returns nothing. On error, throws an exception.
+        """
+
+        path = _SYNC_SCHEDULE_PATH
+        data = {
+            "device_id": device_id,
+            "module_id": module_id,
+            "schedule_id": schedule_id,
+            "name": name,
+            "timetable": json.dumps([{
+                    "id": time_slot.id,
+                    "m_offset": time_slot.m_offset,
+                } for time_slot in timetable]),
+            "zones": json.dumps([{
+                    "id": zone.id,
+                    "type": zone.type,
+                    "temp": zone.temp,
+                    "hw": zone.hw,
+                } for zone in zones]),
+        }
+
+        body = await self._post(
+            path,
+            data=data,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+
     def _get_setpoint_endtime(
         self, 
         setpoint_mode: SetpointMode,
@@ -219,6 +263,7 @@ class Device:
             self.firmware == other.firmware and \
             len(self.modules) == len(other.modules) and \
             all([False for i, j in zip(self.modules, other.modules) if i != j])
+
 
 class Module:
     """Module model representing a Vaillant thermostat."""
