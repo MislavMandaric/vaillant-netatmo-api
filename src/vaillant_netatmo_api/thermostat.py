@@ -232,6 +232,7 @@ class Module:
         battery_percent: int = 0,
         setpoint_away: dict = {},
         setpoint_manual: dict = {},
+        therm_program_list: list[dict] = [],
         measured: dict = {},
         **kwargs,
     ) -> None:
@@ -244,6 +245,7 @@ class Module:
         self.battery_percent = battery_percent
         self.setpoint_away = Setpoint(**setpoint_away)
         self.setpoint_manual = Setpoint(**setpoint_manual)
+        self.therm_program_list = [Program(**program) for program in therm_program_list]
         self.measured = Measured(**measured)
 
     def __eq__(self, other: Module):
@@ -255,6 +257,59 @@ class Module:
             self.module_name == other.module_name and \
             self.firmware == other.firmware and \
             self.battery_percent == other.battery_percent
+
+
+class Program:
+    """Program attribute representing a schedule for a thermostat."""
+
+    def __init__(
+        self,
+        program_id: str | None = None,
+        zones: list[dict] = [],
+        timetable: list[dict] = [],
+        name: str = "",
+        selected: bool = False,
+        **kwargs,
+    ) -> None:
+        """Create new program model."""
+
+        self.id = program_id
+        self.zones = [Zone(**zone) for zone in zones]
+        self.timetable = [TimeSlot(**time_slot) for time_slot in timetable]
+        self.name = name
+        self.selected = selected
+
+
+class Zone:
+    """Zone attribute representing a zone profile which defines how thermostat behaves in a given time slot."""
+
+    def __init__(
+        self,
+        id: int | None = None,
+        type: int = 0,
+        temp: float = 0.0,
+        hw: bool = False,
+    ) -> None:
+        """Create new zone attribute."""
+
+        self.id = id
+        self.type = type
+        self.temp = temp
+        self.hw = hw
+
+
+class TimeSlot:
+    """TimeSlot attribute representing one slot of a timetable schedule."""
+
+    def __init__(
+        self,
+        id: int | None = None,
+        m_offset: int = 0,
+    ) -> None:
+        """Create new time slot attribute."""
+
+        self.id = id
+        self.m_offset = m_offset
 
 
 class Setpoint:

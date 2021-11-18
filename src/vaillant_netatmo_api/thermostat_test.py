@@ -45,6 +45,15 @@ get_thermostats_data_response = {
                         "battery_percent": 80,
                         "setpoint_away": {"setpoint_activate": False},
                         "setpoint_manual": {"setpoint_activate": False},
+                        "therm_program_list": [
+                            {
+                                "zones": [{"type": 0, "temp": 20, "id": 0, "hw": True}],
+                                "timetable": [{"id": 0, "m_offset": 0}],
+                                "program_id": "program_id",
+                                "name": "name",
+                                "selected": True,
+                            }
+                        ],
                         "measured": {"temperature": 25, "setpoint_temp": 26, "est_setpoint_temp": 27},
                     }
                 ]
