@@ -19,6 +19,7 @@ _GET_THERMOSTATS_DATA_PATH = "api/getthermostatsdata"
 _SET_SYSTEM_MODE_PATH = "api/setsystemmode"
 _SET_MINOR_MODE_PATH = "api/setminormode"
 _SYNC_SCHEDULE_PATH = "api/syncschedule"
+_SWITCH_SCHEDULE_PATH = "api/switchschedule"
 _VAILLANT_DEVICE_TYPE = "NAVaillant"
 _RESPONSE_STATUS_OK = "ok"
 _SETPOINT_DEFAULT_DURATION_MINS = 120
@@ -176,6 +177,33 @@ class ThermostatClient(BaseClient):
                     "id": time_slot.id,
                     "m_offset": time_slot.m_offset,
                 } for time_slot in timetable]),
+        }
+
+        body = await self._post(
+            path,
+            data=data,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+
+    async def async_switch_schedule(
+        self,
+        device_id: str,
+        module_id: str,
+        schedule_id: str,
+    ) -> None:
+        """
+        Change the thermostat's active schedule to the provided value.
+
+        On success, returns nothing. On error, throws an exception.
+        """
+
+        path = _SWITCH_SCHEDULE_PATH
+        data = {
+            "device_id": device_id,
+            "module_id": module_id,
+            "schedule_id": schedule_id,
         }
 
         body = await self._post(

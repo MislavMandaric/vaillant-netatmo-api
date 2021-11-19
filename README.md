@@ -59,6 +59,8 @@ There are three APIs available for the `ThermostatClient`, all of which require 
 * `async_get_thermostats_data`: getting all the devices associated with the user account
 * `async_set_system_mode`: changing system mode for a device and module (ie. summer, winter or frostguard)
 * `async_set_minor_mode`: changing minor mode for a device and module (ie. manual mode, away mode or hot water boost mode)
+* `async_sync_schedule`: updating schedule data for a device and module
+* `async_switch_schedule`: changing active schedule for a device and module
 
 ```python
 from vaillant_netatmo_api import thermostat_client, SystemMode, Token

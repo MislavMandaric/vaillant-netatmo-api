@@ -99,6 +99,17 @@ sync_schedule_response = {
     "status": "ok",
 }
 
+switch_schedule_request = {
+    "device_id": "device",
+    "module_id": "module",
+    "schedule_id": "program_id",
+    "access_token": "12345",
+}
+
+switch_schedule_response = {
+    "status": "ok",
+}
+
 refresh_token_request = {
     "grant_type": "refresh_token",
     "client_id": "client",
@@ -619,4 +630,40 @@ class TestThermostat:
                 sync_schedule_request["name"],
                 [Zone(**{"type": 0, "temp": 20, "id": 0, "hw": True})],
                 [TimeSlot(**{"id": 0, "m_offset": 0})],
+            )
+
+    async def test_async_switch_schedule__invalid_request_params__raises_error(self, respx_mock: MockRouter):
+        respx_mock.post("https://api.netatmo.com/api/switchschedule", data=switch_schedule_request).respond(400)
+
+        async with thermostat_client("", "", token, None) as client:
+            with pytest.raises(RequestClientException):
+                await client.async_switch_schedule(
+                    sync_schedule_request["device_id"],
+                    sync_schedule_request["module_id"],
+                    sync_schedule_request["schedule_id"],
+                )
+
+    async def test_async_switch_schedule__server_errors__retry_until_success(self, respx_mock: MockRouter):
+        respx_mock.post("https://api.netatmo.com/api/switchschedule", data=switch_schedule_request).mock(side_effect=[
+            httpx.Response(500),
+            httpx.Response(200, json=switch_schedule_response),
+        ])
+
+        async with thermostat_client("", "", token, None) as client:
+            await client.async_switch_schedule(
+                sync_schedule_request["device_id"],
+                sync_schedule_request["module_id"],
+                sync_schedule_request["schedule_id"],
+            )
+
+            assert respx_mock.calls.call_count == 2
+
+    async def test_async_switch_schedule__valid_request_params__doesnt_raise_error(self, respx_mock: MockRouter):
+        respx_mock.post("https://api.netatmo.com/api/switchschedule", data=switch_schedule_request).respond(200, json=switch_schedule_response)
+
+        async with thermostat_client("", "", token, None) as client:
+            await client.async_switch_schedule(
+                sync_schedule_request["device_id"],
+                sync_schedule_request["module_id"],
+                sync_schedule_request["schedule_id"],
             )
