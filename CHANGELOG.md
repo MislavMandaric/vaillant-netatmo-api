@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.0 (2021-11-19)
+### Feature
+* Adds switch schedule API. Exposes all the schedule models in module init. ([`cf3c63b`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/cf3c63b9df0495885bb94e94bfea1356373349c7))
+
 ## v0.5.0 (2021-11-18)
 ### Feature
 * Tests for the sync schedule method ([`ae893a8`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/ae893a87caa9f955aa9e7e870eca2b964930d189))
