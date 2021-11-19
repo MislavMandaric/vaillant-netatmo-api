@@ -19,10 +19,13 @@ from .thermostat import (
     Device,
     Measured,
     Module,
+    Program,
     Setpoint,
     SetpointMode,
     SystemMode,
     ThermostatClient,
+    TimeSlot,
+    Zone,
     thermostat_client,
 )
 from .token import Token, TokenStore
@@ -44,6 +47,9 @@ __all__ = [
     "UnsuportedArgumentsException",
     "Device",
     "Module",
+    "Program",
+    "Zone",
+    "TimeSlot",
     "Setpoint",
     "Measured",
     "SystemMode",
