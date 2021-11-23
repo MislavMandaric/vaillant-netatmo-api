@@ -375,7 +375,7 @@ class Program:
             if time_slot.day == n.weekday():
                 if len(time_slots) == 0 and time_slot.time != time(0, 0):
                     time_slots.append(TimeSlot(
-                        previous_time_slot.id,
+                        previous_time_slot.id.value,
                         time_slot.day * 1440,
                     ))
                 time_slots.append(time_slot)
