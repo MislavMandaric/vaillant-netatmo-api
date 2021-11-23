@@ -47,7 +47,7 @@ get_thermostats_data_response = {
                         "setpoint_manual": {"setpoint_activate": False},
                         "therm_program_list": [
                             {
-                                "zones": [{"type": 0, "temp": 20, "id": 0, "hw": True}],
+                                "zones": [{"temp": 20, "id": 0, "hw": True}],
                                 "timetable": [{"id": 0, "m_offset": 0}],
                                 "program_id": "program_id",
                                 "name": "name",
@@ -90,7 +90,7 @@ sync_schedule_request = {
     "module_id": "module",
     "schedule_id": "program_id",
     "name": "name",
-    "zones": "[{\"id\": 0, \"type\": 0, \"temp\": 20, \"hw\": true}]",
+    "zones": "[{\"id\": 0, \"temp\": 20, \"hw\": true}]",
     "timetable": "[{\"id\": 0, \"m_offset\": 0}]",
     "access_token": "12345",
 }
@@ -597,7 +597,7 @@ class TestThermostat:
                     sync_schedule_request["module_id"],
                     sync_schedule_request["schedule_id"],
                     sync_schedule_request["name"],
-                    [Zone(**{"type": 0, "temp": 20, "id": 0, "hw": True})],
+                    [Zone(**{"temp": 20, "id": 0, "hw": True})],
                     [TimeSlot(**{"id": 0, "m_offset": 0})],
                 )
 
@@ -613,7 +613,7 @@ class TestThermostat:
                 sync_schedule_request["module_id"],
                 sync_schedule_request["schedule_id"],
                 sync_schedule_request["name"],
-                [Zone(**{"type": 0, "temp": 20, "id": 0, "hw": True})],
+                [Zone(**{"temp": 20, "id": 0, "hw": True})],
                 [TimeSlot(**{"id": 0, "m_offset": 0})],
             )
 
@@ -628,7 +628,7 @@ class TestThermostat:
                 sync_schedule_request["module_id"],
                 sync_schedule_request["schedule_id"],
                 sync_schedule_request["name"],
-                [Zone(**{"type": 0, "temp": 20, "id": 0, "hw": True})],
+                [Zone(**{"temp": 20, "id": 0, "hw": True})],
                 [TimeSlot(**{"id": 0, "m_offset": 0})],
             )
 

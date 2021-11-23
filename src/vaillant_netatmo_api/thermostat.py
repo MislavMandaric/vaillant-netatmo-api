@@ -13,6 +13,7 @@ from httpx import AsyncClient
 from .base import BaseClient
 from .errors import NonOkResponseException, UnsuportedArgumentsException
 from .thermostat_auth import ThermostatAuth
+from .time import now
 from .token import Token, TokenStore
 
 _GET_THERMOSTATS_DATA_PATH = "api/getthermostatsdata"
@@ -168,13 +169,12 @@ class ThermostatClient(BaseClient):
             "schedule_id": schedule_id,
             "name": name,
             "zones": json.dumps([{
-                    "id": zone.id,
-                    "type": zone.type,
+                    "id": zone.id.value,
                     "temp": zone.temp,
                     "hw": zone.hw,
                 } for zone in zones]),
             "timetable": json.dumps([{
-                    "id": time_slot.id,
+                    "id": time_slot.id.value,
                     "m_offset": time_slot.m_offset,
                 } for time_slot in timetable]),
         }
@@ -230,7 +230,7 @@ class ThermostatClient(BaseClient):
                     raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
                 return None
             else:
-                if setpoint_endtime <= datetime.now():
+                if setpoint_endtime <= now():
                     raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
                 return round(setpoint_endtime.timestamp())
 
@@ -351,6 +351,20 @@ class Program:
         self.timetable = [TimeSlot(**time_slot) for time_slot in timetable]
         self.name = name
         self.selected = selected
+    
+    def get_active_time_slot_index(self) -> int:
+        """Returns an index of currently active time slot for a program."""
+
+        n = now()
+        offset = n.weekday() * 1440 + int(n.hour) * 60 + int(n.minute)
+
+        active_index = 0
+        for i, time_slot in enumerate(self.timetable):
+            if time_slot.m_offset > offset:
+                break
+            active_index = i
+
+        return active_index
 
 
 class Zone:
@@ -359,15 +373,13 @@ class Zone:
     def __init__(
         self,
         id: int | None = None,
-        type: int = 0,
         temp: float = 0.0,
         hw: bool = False,
         **kwargs,
     ) -> None:
         """Create new zone attribute."""
 
-        self.id = id
-        self.type = type
+        self.id = ZoneId(id)
         self.temp = temp
         self.hw = hw
 
@@ -383,7 +395,7 @@ class TimeSlot:
     ) -> None:
         """Create new time slot attribute."""
 
-        self.id = id
+        self.id = ZoneId(id)
         self.m_offset = m_offset
 
 
@@ -415,6 +427,16 @@ class Measured:
         self.temperature = temperature
         self.setpoint_temp = setpoint_temp
         self.est_setpoint_temp = est_setpoint_temp
+
+
+class ZoneId(Enum):
+    """ZoneId enumeration representing possible zones for the program."""
+
+    COMFORT = 0
+    NIGHT = 1
+    AWAY = 2
+    OFF = 3
+    ECO = 4
 
 
 class SystemMode(Enum):
