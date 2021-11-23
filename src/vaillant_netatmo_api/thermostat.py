@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, time
 from enum import Enum
 import json
 from typing import AsyncGenerator, Callable
@@ -352,19 +352,36 @@ class Program:
         self.name = name
         self.selected = selected
     
-    def get_active_time_slot_index(self) -> int:
-        """Returns an index of currently active time slot for a program."""
+    def get_active_zone_id(self) -> ZoneId:
+        """Returns a currently active zone for a program."""
+
+        zone_id = ZoneId.COMFORT
+        for time_slot in self.timetable:
+            if not time_slot.is_already_started:
+                break
+            zone_id = time_slot.id
+
+        return zone_id
+
+    def get_timeslots_for_today(self) -> list[TimeSlot]:
+        """
+        Returns a list of time slots which are defined for today.
+        """
 
         n = now()
-        offset = n.weekday() * 1440 + int(n.hour) * 60 + int(n.minute)
 
-        active_index = 0
-        for i, time_slot in enumerate(self.timetable):
-            if time_slot.m_offset > offset:
-                break
-            active_index = i
+        time_slots = []
+        for time_slot in self.timetable:
+            if time_slot.day == n.weekday():
+                if len(time_slots) == 0 and time_slot.time != time(0, 0):
+                    time_slots.append(TimeSlot(
+                        previous_time_slot.id,
+                        time_slot.day * 1440,
+                    ))
+                time_slots.append(time_slot)
+            previous_time_slot = time_slot
 
-        return active_index
+        return time_slots
 
 
 class Zone:
@@ -397,6 +414,31 @@ class TimeSlot:
 
         self.id = ZoneId(id)
         self.m_offset = m_offset
+
+    @property
+    def time(self) -> time:
+        """Returns time instance representing the offset defined for this time slot."""
+
+        daily_offset = self.m_offset % 1440
+
+        return time(daily_offset // 60, daily_offset % 60)
+
+    @property
+    def day(self) -> int:
+        """Returns a day for which this time slot is defined, using the same format as datetime.weekday()."""
+
+        return self.m_offset // 1440
+
+    @property
+    def is_already_started(self) -> bool:
+        n = now()
+
+        if self.day < n.weekday():
+            return True
+        elif self.day == n.weekday() and self.time <= n.time():
+            return True
+        else:
+            return False
 
 
 class Setpoint:
