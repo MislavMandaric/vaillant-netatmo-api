@@ -1,8 +1,9 @@
 import httpx
 import pytest
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
+from pytest_mock import MockerFixture
 from respx import MockRouter
 
 from vaillant_netatmo_api.errors import RequestClientException, UnsuportedArgumentsException
@@ -255,15 +256,19 @@ class TestThermostat:
                     setpoint_temp=25,
                 )
 
-    async def test_async_set_minor_mode__activate_manual_with_temp_and_endtime__executes_successfully(self, respx_mock: MockRouter):
-        endtime = round(datetime.now().timestamp()) + 1 # unix epoch timestamp
+    async def test_async_set_minor_mode__activate_manual_with_temp_and_endtime__executes_successfully(self, respx_mock: MockRouter, mocker: MockerFixture):
+        some_time = datetime(2021, 11, 22, 1, 0)
+
+        mocker.patch("vaillant_netatmo_api.thermostat.now", return_value=some_time)
+
+        endtime = some_time + timedelta(seconds=10)
 
         set_minor_mode_request = {
             "device_id": "device",
             "module_id": "module",
             "setpoint_mode": "manual",
             "activate": True,
-            "setpoint_endtime": endtime,
+            "setpoint_endtime": int(endtime.timestamp()),
             "setpoint_temp": 25,
             "access_token": "12345",
         }
@@ -280,7 +285,7 @@ class TestThermostat:
                 set_minor_mode_request["module_id"],
                 SetpointMode.MANUAL,
                 True,
-                setpoint_endtime=datetime.fromtimestamp(endtime),
+                setpoint_endtime=endtime,
                 setpoint_temp=25,
             )
 
@@ -364,15 +369,19 @@ class TestThermostat:
                 True,
             )
 
-    async def test_async_set_minor_mode__activate_away_without_temp__executes_successfully(self, respx_mock: MockRouter):
-        endtime = round(datetime.now().timestamp()) + 1 # unix epoch timestamp
+    async def test_async_set_minor_mode__activate_away_without_temp__executes_successfully(self, respx_mock: MockRouter, mocker: MockerFixture):
+        some_time = datetime(2021, 11, 22, 1, 0)
+
+        mocker.patch("vaillant_netatmo_api.thermostat.now", return_value=some_time)
+
+        endtime = some_time + timedelta(seconds=10)
         
         set_minor_mode_request = {
             "device_id": "device",
             "module_id": "module",
             "setpoint_mode": "away",
             "activate": True,
-            "setpoint_endtime": endtime,
+            "setpoint_endtime": int(endtime.timestamp()),
             "access_token": "12345",
         }
 
@@ -388,7 +397,7 @@ class TestThermostat:
                 set_minor_mode_request["module_id"],
                 SetpointMode.AWAY,
                 True,
-                setpoint_endtime=datetime.fromtimestamp(endtime),
+                setpoint_endtime=endtime,
             )
     
     async def test_async_set_minor_mode__activate_away_without_endtime__raises_error(self):
@@ -481,15 +490,19 @@ class TestThermostat:
                     True,
                 )
 
-    async def test_async_set_minor_mode__activate_hwb_without_temp__executes_successfully(self, respx_mock: MockRouter):
-        endtime = round(datetime.now().timestamp()) + 1 # unix epoch timestamp
+    async def test_async_set_minor_mode__activate_hwb_without_temp__executes_successfully(self, respx_mock: MockRouter, mocker: MockerFixture):
+        some_time = datetime(2021, 11, 22, 1, 0)
+
+        mocker.patch("vaillant_netatmo_api.thermostat.now", return_value=some_time)
+
+        endtime = some_time + timedelta(seconds=10)
 
         set_minor_mode_request = {
             "device_id": "device",
             "module_id": "module",
             "setpoint_mode": "away",
             "activate": True,
-            "setpoint_endtime": endtime,
+            "setpoint_endtime": int(endtime.timestamp()),
             "access_token": "12345",
         }
 
@@ -505,7 +518,7 @@ class TestThermostat:
                 set_minor_mode_request["module_id"],
                 SetpointMode.AWAY,
                 True,
-                setpoint_endtime=datetime.fromtimestamp(endtime),
+                setpoint_endtime=endtime,
             )
     
     async def test_async_set_minor_mode__activate_hwb_without_endtime__raises_error(self):
