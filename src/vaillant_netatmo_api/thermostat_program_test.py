@@ -1,6 +1,7 @@
 import pytest
 
 from datetime import datetime
+
 from pytest_mock import MockerFixture
 
 from vaillant_netatmo_api.thermostat import Program

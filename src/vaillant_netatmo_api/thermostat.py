@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import json
+
 from contextlib import asynccontextmanager
 from datetime import datetime, time
 from enum import Enum
-import json
 from typing import AsyncGenerator, Callable
 
 from httpx import AsyncClient

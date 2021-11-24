@@ -1,7 +1,8 @@
 import pytest
+
 from time import time
 
-from .token import Token
+from vaillant_netatmo_api.token import Token
 
 
 @pytest.mark.asyncio

@@ -1,9 +1,9 @@
-import datetime
+import httpx
 import pytest
 
-import httpx
+from datetime import timedelta
 
-from .errors import ApiException, NetworkException, RequestBackoffException, RequestClientException, RequestException, RequestServerException, RequestUnauthorizedException, client_error_handler, NetworkTimeoutException
+from vaillant_netatmo_api.errors import ApiException, NetworkException, RequestBackoffException, RequestClientException, RequestException, RequestServerException, RequestUnauthorizedException, client_error_handler, NetworkTimeoutException
 
 
 @pytest.mark.asyncio
@@ -26,7 +26,7 @@ class TestErrors:
         request = httpx.Request("POST", "https://api.netatmo.com/")
 
         response = httpx.Response(401, request=request)
-        response.elapsed = datetime.timedelta()
+        response.elapsed = timedelta()
 
         with pytest.raises(RequestUnauthorizedException):
             with client_error_handler():
@@ -36,7 +36,7 @@ class TestErrors:
         request = httpx.Request("POST", "https://api.netatmo.com/")
 
         response = httpx.Response(403, request=request)
-        response.elapsed = datetime.timedelta()
+        response.elapsed = timedelta()
 
         with pytest.raises(RequestUnauthorizedException):
             with client_error_handler():
@@ -46,7 +46,7 @@ class TestErrors:
         request = httpx.Request("POST", "https://api.netatmo.com/")
 
         response = httpx.Response(429, request=request)
-        response.elapsed = datetime.timedelta()
+        response.elapsed = timedelta()
 
         with pytest.raises(RequestBackoffException):
             with client_error_handler():
@@ -56,7 +56,7 @@ class TestErrors:
         request = httpx.Request("POST", "https://api.netatmo.com/")
 
         response = httpx.Response(400, request=request)
-        response.elapsed = datetime.timedelta()
+        response.elapsed = timedelta()
 
         with pytest.raises(RequestClientException):
             with client_error_handler():
@@ -66,7 +66,7 @@ class TestErrors:
         request = httpx.Request("POST", "https://api.netatmo.com/")
 
         response = httpx.Response(500, request=request)
-        response.elapsed = datetime.timedelta()
+        response.elapsed = timedelta()
 
         with pytest.raises(RequestServerException):
             with client_error_handler():
@@ -76,7 +76,7 @@ class TestErrors:
         request = httpx.Request("POST", "https://api.netatmo.com/")
 
         response = httpx.Response(600, request=request)
-        response.elapsed = datetime.timedelta()
+        response.elapsed = timedelta()
 
         with pytest.raises(RequestException):
             with client_error_handler():
@@ -89,7 +89,7 @@ class TestApiException:
         request = httpx.Request("POST", "https://api.netatmo.com/", content="a=b&access_token=nesto&c=d&password=drugo")
 
         response = httpx.Response(500, request=request, content="response")
-        response.elapsed = datetime.timedelta()
+        response.elapsed = timedelta()
 
         with pytest.raises(ApiException) as ex:
             raise ApiException("test", request=request, response=response)

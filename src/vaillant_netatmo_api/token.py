@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+
 from time import time
 from typing import Callable
 
