@@ -372,15 +372,16 @@ class Program:
         n = now()
 
         time_slots = []
+        previous_time_slot_zone_id = ZoneId.COMFORT
         for time_slot in self.timetable:
             if time_slot.day == n.weekday():
                 if len(time_slots) == 0 and time_slot.time != time(0, 0):
                     time_slots.append(TimeSlot(
-                        previous_time_slot.id.value,
+                        previous_time_slot_zone_id.value,
                         time_slot.day * 1440,
                     ))
                 time_slots.append(time_slot)
-            previous_time_slot = time_slot
+            previous_time_slot_zone_id = time_slot.id
 
         return time_slots
 
