@@ -1,12 +1,14 @@
-from datetime import datetime
+import httpx
 import pytest
+
+from datetime import datetime, timedelta
+
+from pytest_mock import MockerFixture
 from respx import MockRouter
 
-import httpx
-
-from .errors import RequestClientException, UnsuportedArgumentsException
-from .thermostat import Device, SetpointMode, SystemMode, TimeSlot, Zone, thermostat_client
-from .token import Token
+from vaillant_netatmo_api.errors import RequestClientException, UnsuportedArgumentsException
+from vaillant_netatmo_api.thermostat import Device, SetpointMode, SystemMode, TimeSlot, Zone, thermostat_client
+from vaillant_netatmo_api.token import Token
 
 token = Token({
     "access_token": "12345",
@@ -47,7 +49,7 @@ get_thermostats_data_response = {
                         "setpoint_manual": {"setpoint_activate": False},
                         "therm_program_list": [
                             {
-                                "zones": [{"type": 0, "temp": 20, "id": 0, "hw": True}],
+                                "zones": [{"temp": 20, "id": 0, "hw": True}],
                                 "timetable": [{"id": 0, "m_offset": 0}],
                                 "program_id": "program_id",
                                 "name": "name",
@@ -90,7 +92,7 @@ sync_schedule_request = {
     "module_id": "module",
     "schedule_id": "program_id",
     "name": "name",
-    "zones": "[{\"id\": 0, \"type\": 0, \"temp\": 20, \"hw\": true}]",
+    "zones": "[{\"id\": 0, \"temp\": 20, \"hw\": true}]",
     "timetable": "[{\"id\": 0, \"m_offset\": 0}]",
     "access_token": "12345",
 }
@@ -254,15 +256,19 @@ class TestThermostat:
                     setpoint_temp=25,
                 )
 
-    async def test_async_set_minor_mode__activate_manual_with_temp_and_endtime__executes_successfully(self, respx_mock: MockRouter):
-        endtime = round(datetime.now().timestamp()) + 1 # unix epoch timestamp
+    async def test_async_set_minor_mode__activate_manual_with_temp_and_endtime__executes_successfully(self, respx_mock: MockRouter, mocker: MockerFixture):
+        some_time = datetime(2021, 11, 22, 1, 0)
+
+        mocker.patch("vaillant_netatmo_api.thermostat.now", return_value=some_time)
+
+        endtime = some_time + timedelta(seconds=10)
 
         set_minor_mode_request = {
             "device_id": "device",
             "module_id": "module",
             "setpoint_mode": "manual",
             "activate": True,
-            "setpoint_endtime": endtime,
+            "setpoint_endtime": int(endtime.timestamp()),
             "setpoint_temp": 25,
             "access_token": "12345",
         }
@@ -279,7 +285,7 @@ class TestThermostat:
                 set_minor_mode_request["module_id"],
                 SetpointMode.MANUAL,
                 True,
-                setpoint_endtime=datetime.fromtimestamp(endtime),
+                setpoint_endtime=endtime,
                 setpoint_temp=25,
             )
 
@@ -363,15 +369,19 @@ class TestThermostat:
                 True,
             )
 
-    async def test_async_set_minor_mode__activate_away_without_temp__executes_successfully(self, respx_mock: MockRouter):
-        endtime = round(datetime.now().timestamp()) + 1 # unix epoch timestamp
+    async def test_async_set_minor_mode__activate_away_without_temp__executes_successfully(self, respx_mock: MockRouter, mocker: MockerFixture):
+        some_time = datetime(2021, 11, 22, 1, 0)
+
+        mocker.patch("vaillant_netatmo_api.thermostat.now", return_value=some_time)
+
+        endtime = some_time + timedelta(seconds=10)
         
         set_minor_mode_request = {
             "device_id": "device",
             "module_id": "module",
             "setpoint_mode": "away",
             "activate": True,
-            "setpoint_endtime": endtime,
+            "setpoint_endtime": int(endtime.timestamp()),
             "access_token": "12345",
         }
 
@@ -387,7 +397,7 @@ class TestThermostat:
                 set_minor_mode_request["module_id"],
                 SetpointMode.AWAY,
                 True,
-                setpoint_endtime=datetime.fromtimestamp(endtime),
+                setpoint_endtime=endtime,
             )
     
     async def test_async_set_minor_mode__activate_away_without_endtime__raises_error(self):
@@ -480,15 +490,19 @@ class TestThermostat:
                     True,
                 )
 
-    async def test_async_set_minor_mode__activate_hwb_without_temp__executes_successfully(self, respx_mock: MockRouter):
-        endtime = round(datetime.now().timestamp()) + 1 # unix epoch timestamp
+    async def test_async_set_minor_mode__activate_hwb_without_temp__executes_successfully(self, respx_mock: MockRouter, mocker: MockerFixture):
+        some_time = datetime(2021, 11, 22, 1, 0)
+
+        mocker.patch("vaillant_netatmo_api.thermostat.now", return_value=some_time)
+
+        endtime = some_time + timedelta(seconds=10)
 
         set_minor_mode_request = {
             "device_id": "device",
             "module_id": "module",
             "setpoint_mode": "away",
             "activate": True,
-            "setpoint_endtime": endtime,
+            "setpoint_endtime": int(endtime.timestamp()),
             "access_token": "12345",
         }
 
@@ -504,7 +518,7 @@ class TestThermostat:
                 set_minor_mode_request["module_id"],
                 SetpointMode.AWAY,
                 True,
-                setpoint_endtime=datetime.fromtimestamp(endtime),
+                setpoint_endtime=endtime,
             )
     
     async def test_async_set_minor_mode__activate_hwb_without_endtime__raises_error(self):
@@ -597,7 +611,7 @@ class TestThermostat:
                     sync_schedule_request["module_id"],
                     sync_schedule_request["schedule_id"],
                     sync_schedule_request["name"],
-                    [Zone(**{"type": 0, "temp": 20, "id": 0, "hw": True})],
+                    [Zone(**{"temp": 20, "id": 0, "hw": True})],
                     [TimeSlot(**{"id": 0, "m_offset": 0})],
                 )
 
@@ -613,7 +627,7 @@ class TestThermostat:
                 sync_schedule_request["module_id"],
                 sync_schedule_request["schedule_id"],
                 sync_schedule_request["name"],
-                [Zone(**{"type": 0, "temp": 20, "id": 0, "hw": True})],
+                [Zone(**{"temp": 20, "id": 0, "hw": True})],
                 [TimeSlot(**{"id": 0, "m_offset": 0})],
             )
 
@@ -628,7 +642,7 @@ class TestThermostat:
                 sync_schedule_request["module_id"],
                 sync_schedule_request["schedule_id"],
                 sync_schedule_request["name"],
-                [Zone(**{"type": 0, "temp": 20, "id": 0, "hw": True})],
+                [Zone(**{"temp": 20, "id": 0, "hw": True})],
                 [TimeSlot(**{"id": 0, "m_offset": 0})],
             )
 

@@ -1,12 +1,12 @@
+import httpx
 import pytest
+
 from pytest_mock import MockerFixture
 from respx import MockRouter
 
-import httpx
-
-from .auth import auth_client
-from .errors import RequestClientException
-from .token import Token
+from vaillant_netatmo_api.auth import auth_client
+from vaillant_netatmo_api.errors import RequestClientException
+from vaillant_netatmo_api.token import Token
 
 get_token_request = {
     "username": "user",
