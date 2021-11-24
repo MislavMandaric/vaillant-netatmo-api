@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v0.7.0 (2021-11-24)
+### Feature
+* Implements time slot and timetable helper methods ([`0354c79`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/0354c79f5e688966cb45613155b7646147e8c10f))
+* Adds method for getting currently active time slot to the program ([`8762eaf`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/8762eafdd4c495cdc492b75824f75d680f1f2f54))
+
+### Fix
+* Fixes creating time slot pad for non-existing start time slot ([`568465f`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/568465fcfc1c1de8a99062dfe1f6d26fe30fc802))
+
 ## v0.6.0 (2021-11-19)
 ### Feature
 * Adds switch schedule API. Exposes all the schedule models in module init. ([`cf3c63b`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/cf3c63b9df0495885bb94e94bfea1356373349c7))
