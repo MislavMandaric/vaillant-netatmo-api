@@ -170,12 +170,13 @@ class ThermostatClient(BaseClient):
             "schedule_id": schedule_id,
             "name": name,
             "zones": json.dumps([{
-                    "id": zone.id.value,
+                    "id": zone.id,
+                    # TODO: Should this call include name?
                     "temp": zone.temp,
                     "hw": zone.hw,
                 } for zone in zones]),
             "timetable": json.dumps([{
-                    "id": time_slot.id.value,
+                    "id": time_slot.id,
                     "m_offset": time_slot.m_offset,
                 } for time_slot in timetable]),
         }
@@ -353,16 +354,20 @@ class Program:
         self.name = name
         self.selected = selected
     
-    def get_active_zone_id(self) -> ZoneId:
+    def get_active_zone(self) -> Zone | None:
         """Returns a currently active zone for a program."""
 
-        zone_id = ZoneId.COMFORT
+        zone_id = 0
         for time_slot in self.timetable:
             if not time_slot.is_already_started:
                 break
             zone_id = time_slot.id
 
-        return zone_id
+        for zone in self.zones:
+            if zone.id == zone_id:
+                return zone
+        
+        return None
 
     def get_timeslots_for_today(self) -> list[TimeSlot]:
         """
@@ -372,12 +377,12 @@ class Program:
         n = now()
 
         time_slots = []
-        previous_time_slot_zone_id = ZoneId.COMFORT
+        previous_time_slot_zone_id = 0
         for time_slot in self.timetable:
             if time_slot.day == n.weekday():
                 if len(time_slots) == 0 and time_slot.time != time(0, 0):
                     time_slots.append(TimeSlot(
-                        previous_time_slot_zone_id.value,
+                        previous_time_slot_zone_id,
                         time_slot.day * 1440,
                     ))
                 time_slots.append(time_slot)
@@ -392,15 +397,32 @@ class Zone:
     def __init__(
         self,
         id: int | None = None,
+        name: str = "",
         temp: float = 0.0,
         hw: bool = False,
         **kwargs,
     ) -> None:
         """Create new zone attribute."""
 
-        self.id = ZoneId(id)
+        self.id = id
         self.temp = temp
         self.hw = hw
+
+        if name:
+            self.name = name
+        else:
+            if id == 0:
+                self.name = "Comfort"
+            elif id == 1:
+                self.name = "Night"
+            elif id == 2:
+                self.name = "Away"
+            elif id == 3:
+                self.name = "Off"
+            elif id == 4:
+                self.name = "Eco"
+            else:
+                self.name = ""
 
 
 class TimeSlot:
@@ -414,7 +436,7 @@ class TimeSlot:
     ) -> None:
         """Create new time slot attribute."""
 
-        self.id = ZoneId(id)
+        self.id = id
         self.m_offset = m_offset
 
     @property
@@ -471,16 +493,6 @@ class Measured:
         self.temperature = temperature
         self.setpoint_temp = setpoint_temp
         self.est_setpoint_temp = est_setpoint_temp
-
-
-class ZoneId(Enum):
-    """ZoneId enumeration representing possible zones for the program."""
-
-    COMFORT = 0
-    NIGHT = 1
-    AWAY = 2
-    OFF = 3
-    ECO = 4
 
 
 class SystemMode(Enum):
