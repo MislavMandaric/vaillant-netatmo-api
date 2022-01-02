@@ -177,6 +177,18 @@ class TestThermostat:
             for x in zip(devices, expected_devices):
                 assert x[0] == Device(**x[1])
 
+    async def test_async_get_thermostats_data__request_data__contains_ts_param(self, respx_mock: MockRouter, mocker: MockerFixture):
+        some_time = datetime(2021, 11, 22, 1, 0)
+
+        mocker.patch("vaillant_netatmo_api.base.now", return_value=some_time)
+
+        respx_mock.post("https://api.netatmo.com/api/getthermostatsdata", data=get_thermostats_data_request).respond(200, json=get_thermostats_data_response)
+
+        async with thermostat_client("", "", token, None) as client:
+            _ = await client.async_get_thermostats_data()
+
+            assert respx_mock.calls.last.request.url.params["ts"] == str(round(some_time.timestamp()))
+
     async def test_async_set_system_mode__invalid_request_params__raises_error(self, respx_mock: MockRouter):
         respx_mock.post("https://api.netatmo.com/api/setsystemmode", data=set_system_mode_request).respond(400)
 

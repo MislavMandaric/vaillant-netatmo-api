@@ -6,6 +6,7 @@ from httpx import AsyncClient, Auth
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, stop_after_delay, wait_random_exponential
 
 from .errors import RetryableException, client_error_handler
+from .time import now
 
 _API_HOST = "https://api.netatmo.com/"
 
@@ -47,6 +48,8 @@ class BaseClient:
         with client_error_handler():
             resp = await self._client.post(
                 f"{_API_HOST}{path}",
+                headers={"Cache-Control": "no-cache"},
+                params={"ts": round(now().timestamp())},
                 data=data,
                 auth=self._auth,
                 timeout=15.0,
