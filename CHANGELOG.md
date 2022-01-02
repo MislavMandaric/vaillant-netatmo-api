@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.7.2 (2022-01-02)
+### Fix
+* Adds cache control headers and manual cache workaround with ts query param ([`6b30fff`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/6b30fff5cc9c298a587c5e31b4ea3a0d807add35))
+
 ## v0.7.1 (2021-12-03)
 ### Fix
 * Removes ZoneId enum and replaces logic to work with Zone models directly, by providing it a name ([`be0e546`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/be0e5460365238f3888bed4101141352c90cb11f))
