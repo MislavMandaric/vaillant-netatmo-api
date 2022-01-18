@@ -18,6 +18,7 @@ from .time import now
 from .token import Token, TokenStore
 
 _GET_THERMOSTATS_DATA_PATH = "api/getthermostatsdata"
+_GET_MEASURE_PATH = "api/getmeasure"
 _SET_SYSTEM_MODE_PATH = "api/setsystemmode"
 _SET_MINOR_MODE_PATH = "api/setminormode"
 _SYNC_SCHEDULE_PATH = "api/syncschedule"
@@ -83,6 +84,49 @@ class ThermostatClient(BaseClient):
             raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
 
         return [Device(**device) for device in body["body"]["devices"]]
+
+    async def async_get_measure(
+        self,
+        device_id: str,
+        module_id: str,
+        type: MeasurementType,
+        scale: MeasurementScale,
+        date_begin: datetime,
+        date_end: datetime | None = None,
+        limit: int | None = None,
+    ) -> list[MeasurementItem]:
+        """
+        Get real time measurement data from the Netatmo API.
+
+        On success, returns a list of measurements for provided measurement type. On error, throws an exception.
+        """
+
+        path = _GET_MEASURE_PATH
+        data = {
+            "device_id": device_id,
+            "module_id": module_id,
+            "type": type.value,
+            "scale": scale.value,
+            "date_begin": round(date_begin.timestamp()),
+        }
+
+        if date_end is not None:
+            data["date_end"] = round(date_end.timestamp())
+        if limit is not None:
+            data["limit"] = limit
+
+        body = await self._post(
+            path,
+            data=data,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+
+        return [
+            MeasurementItem(**measurement)
+            for measurement in body["body"]
+        ]
 
     async def async_set_system_mode(
         self, device_id: str, module_id: str, system_mode: SystemMode
@@ -495,6 +539,36 @@ class Measured:
         self.est_setpoint_temp = est_setpoint_temp
 
 
+class MeasurementItem:
+    """MeasurementItem attribute representing a one measurement of thermostat module."""
+
+    def __init__(
+        self,
+        beg_time: int | None = None,
+        step_time: int | None = None,
+        value: list[list[float]] = [],
+        **kwargs,
+    ) -> None:
+        """Create new measurement item."""
+
+        self.beg_time = beg_time
+        self.step_time = step_time
+        self.value = [
+            value_item
+            for inner_list in value
+            for value_item in inner_list
+        ]
+
+    def __eq__(self, other: MeasurementItem):
+        if (not isinstance(other, MeasurementItem)):
+            return False
+        
+        return self.beg_time == other.beg_time and \
+            self.step_time == other.step_time and \
+            len(self.value) == len(other.value) and \
+            all([False for i, j in zip(self.value, other.value) if i != j])
+
+
 class SystemMode(Enum):
     """SystemMode enumeration representing possible system modes of the thermostat."""
 
@@ -509,3 +583,20 @@ class SetpointMode(Enum):
     MANUAL = "manual"
     AWAY = "away"
     HWB = "hwb"
+
+
+class MeasurementType(Enum):
+    """MeasurementType enumeration representing possible measurements of the thermostat."""
+
+    TEMPERATURE = "temperature"
+    SETPOINT_TEMPERATURE = "sp_temperature"
+    SUM_BOILER_ON = "sum_boiler_on"
+    SUM_BOILER_OFF = "sum_boiler_off"
+
+
+class MeasurementScale(Enum):
+    """MeasurementScale enumeration representing possible scale options for measurements of the thermostat."""
+
+    MAX = "max"
+    HALF_HOUR = "30min"
+    HOUR = "1hour"

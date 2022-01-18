@@ -7,7 +7,7 @@ from pytest_mock import MockerFixture
 from respx import MockRouter
 
 from vaillant_netatmo_api.errors import RequestClientException, UnsuportedArgumentsException
-from vaillant_netatmo_api.thermostat import Device, SetpointMode, SystemMode, TimeSlot, Zone, thermostat_client
+from vaillant_netatmo_api.thermostat import Device, MeasurementItem, MeasurementScale, MeasurementType, SetpointMode, SystemMode, TimeSlot, Zone, thermostat_client
 from vaillant_netatmo_api.token import Token
 
 token = Token({
@@ -62,6 +62,23 @@ get_thermostats_data_response = {
             }
         ]
     }
+}
+
+get_measure_request = {
+    "device_id": "device",
+    "module_id": "module",
+    "type": "temperature",
+    "scale": "max",
+    "date_begin": 1642252768,
+    "access_token": "12345",
+}
+
+get_measure_response = {
+    "status": "ok",
+    "body": [
+        {"beg_time": 1642252768, "step_time": 600, "value": [[20], [20.1]]},
+        {"beg_time": 1642252768, "step_time": 600, "value": [[20.2], [20.3]]}
+    ]
 }
 
 set_system_mode_request = {
@@ -188,6 +205,37 @@ class TestThermostat:
             _ = await client.async_get_thermostats_data()
 
             assert respx_mock.calls.last.request.url.params["ts"] == str(round(some_time.timestamp()))
+
+    async def test_async_get_measure__invalid_request_params__raises_error(self, respx_mock: MockRouter):
+        respx_mock.post("https://api.netatmo.com/api/getmeasure", data=get_measure_request).respond(400)
+
+        async with thermostat_client("", "", token, None) as client:
+            with pytest.raises(RequestClientException):
+                await client.async_get_measure(
+                    get_measure_request["device_id"],
+                    get_measure_request["module_id"],
+                    MeasurementType.TEMPERATURE,
+                    MeasurementScale.MAX,
+                    datetime.fromtimestamp(get_measure_request["date_begin"]),
+                )
+
+    async def test_async_get_measure__valid_request_params__returns_valid_measurement_item_list(self, respx_mock: MockRouter):
+        respx_mock.post("https://api.netatmo.com/api/getmeasure", data=get_measure_request).respond(200, json=get_measure_response)
+
+        async with thermostat_client("", "", token, None) as client:
+            measurement_items = await client.async_get_measure(
+                get_measure_request["device_id"],
+                get_measure_request["module_id"],
+                MeasurementType.TEMPERATURE,
+                MeasurementScale.MAX,
+                datetime.fromtimestamp(get_measure_request["date_begin"]),
+            )
+
+            expected_measurement_items = get_measure_response["body"]
+
+            assert len(measurement_items) == len(expected_measurement_items)
+            for x in zip(measurement_items, expected_measurement_items):
+                assert x[0] == MeasurementItem(**x[1])
 
     async def test_async_set_system_mode__invalid_request_params__raises_error(self, respx_mock: MockRouter):
         respx_mock.post("https://api.netatmo.com/api/setsystemmode", data=set_system_mode_request).respond(400)
