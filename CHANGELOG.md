@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.8.1 (2022-01-22)
+### Fix
+* Removes custom headers and params for caching workaround ([`c6af9ab`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/c6af9ab1958579c3fe15224904681042cad78148))
+
 ## v0.8.0 (2022-01-18)
 ### Feature
 * Adds new getmeasure endpoint for getting real time measurement data from Vaillant API ([`bab3fd9`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/bab3fd92a7037a0cb6524d4ec4c1718e80ef4a98))
