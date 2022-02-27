@@ -37,13 +37,14 @@ async def thermostat_client(
 ) -> AsyncGenerator[ThermostatClient, None]:
     client = AsyncClient()
     token_store = TokenStore(client_id, client_secret, token, on_token_update)
-    
+
     c = ThermostatClient(client, token_store)
 
     try:
         yield c
     finally:
         await client.aclose()
+
 
 class ThermostatClient(BaseClient):
     """
@@ -81,7 +82,12 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.",
+                path=path,
+                data=data,
+                body=body,
+            )
 
         return [Device(**device) for device in body["body"]["devices"]]
 
@@ -121,12 +127,14 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.",
+                path=path,
+                data=data,
+                body=body,
+            )
 
-        return [
-            MeasurementItem(**measurement)
-            for measurement in body["body"]
-        ]
+        return [MeasurementItem(**measurement) for measurement in body["body"]]
 
     async def async_set_system_mode(
         self, device_id: str, module_id: str, system_mode: SystemMode
@@ -150,7 +158,12 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.",
+                path=path,
+                data=data,
+                body=body,
+            )
 
     async def async_set_minor_mode(
         self,
@@ -189,7 +202,12 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.",
+                path=path,
+                data=data,
+                body=body,
+            )
 
     async def async_sync_schedule(
         self,
@@ -213,16 +231,26 @@ class ThermostatClient(BaseClient):
             "module_id": module_id,
             "schedule_id": schedule_id,
             "name": name,
-            "zones": json.dumps([{
-                    "id": zone.id,
-                    # TODO: Should this call include name?
-                    "temp": zone.temp,
-                    "hw": zone.hw,
-                } for zone in zones]),
-            "timetable": json.dumps([{
-                    "id": time_slot.id,
-                    "m_offset": time_slot.m_offset,
-                } for time_slot in timetable]),
+            "zones": json.dumps(
+                [
+                    {
+                        "id": zone.id,
+                        # TODO: Should this call include name?
+                        "temp": zone.temp,
+                        "hw": zone.hw,
+                    }
+                    for zone in zones
+                ]
+            ),
+            "timetable": json.dumps(
+                [
+                    {
+                        "id": time_slot.id,
+                        "m_offset": time_slot.m_offset,
+                    }
+                    for time_slot in timetable
+                ]
+            ),
         }
 
         body = await self._post(
@@ -231,7 +259,12 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.",
+                path=path,
+                data=data,
+                body=body,
+            )
 
     async def async_switch_schedule(
         self,
@@ -258,46 +291,84 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.",
+                path=path,
+                data=data,
+                body=body,
+            )
 
     def _get_setpoint_endtime(
-        self, 
+        self,
         setpoint_mode: SetpointMode,
         activate: bool,
         setpoint_endtime: datetime | None = None,
     ) -> int | None:
         if not activate:
             if setpoint_endtime is not None:
-                raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
+                raise UnsuportedArgumentsException(
+                    "Provided arguments for setting endtime are not valid.",
+                    setpoint_mode=setpoint_mode,
+                    activate=activate,
+                    setpoint_endtime=setpoint_endtime,
+                )
             return None
         else:
             if setpoint_endtime is None:
-                if setpoint_mode == SetpointMode.MANUAL or setpoint_mode == SetpointMode.HWB:
-                    raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
+                if (
+                    setpoint_mode == SetpointMode.MANUAL
+                    or setpoint_mode == SetpointMode.HWB
+                ):
+                    raise UnsuportedArgumentsException(
+                        "Provided arguments for setting endtime are not valid.",
+                        setpoint_mode=setpoint_mode,
+                        activate=activate,
+                        setpoint_endtime=setpoint_endtime,
+                    )
                 return None
             else:
                 if setpoint_endtime <= now():
-                    raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
+                    raise UnsuportedArgumentsException(
+                        "Provided arguments for setting endtime are not valid.",
+                        setpoint_mode=setpoint_mode,
+                        activate=activate,
+                        setpoint_endtime=setpoint_endtime,
+                    )
                 return round(setpoint_endtime.timestamp())
 
     def _get_setpoint_temp(
-        self, 
+        self,
         setpoint_mode: SetpointMode,
         activate: bool,
         setpoint_temp: float | None = None,
     ) -> float | None:
         if not activate:
             if setpoint_temp is not None:
-                raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
+                raise UnsuportedArgumentsException(
+                    "Provided arguments for setting temp are not valid.",
+                    setpoint_mode=setpoint_mode,
+                    activate=activate,
+                    setpoint_temp=setpoint_temp,
+                )
             return None
         else:
             if setpoint_temp is None:
                 if setpoint_mode == SetpointMode.MANUAL:
-                    raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
+                    raise UnsuportedArgumentsException(
+                        "Provided arguments for setting temp are not valid.",
+                        setpoint_mode=setpoint_mode,
+                        activate=activate,
+                        setpoint_temp=setpoint_temp,
+                    )
                 return None
             else:
                 if setpoint_mode != SetpointMode.MANUAL:
-                    raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
+                    raise UnsuportedArgumentsException(
+                        "Provided arguments for setting temp are not valid.",
+                        setpoint_mode=setpoint_mode,
+                        activate=activate,
+                        setpoint_temp=setpoint_temp,
+                    )
                 return setpoint_temp
 
 
@@ -314,6 +385,7 @@ class Device:
         setpoint_default_duration: int = _SETPOINT_DEFAULT_DURATION_MINS,
         setpoint_hwb: dict = {},
         modules: list[dict] = [],
+        outdoor_temperature: dict = {},
         **kwargs,
     ) -> None:
         """Create new device model."""
@@ -326,17 +398,20 @@ class Device:
         self.setpoint_default_duration = setpoint_default_duration
         self.setpoint_hwb = Setpoint(**setpoint_hwb)
         self.modules = [Module(**module) for module in modules]
+        self.outdoor_temperature = OutdoorTemperature(**outdoor_temperature)
 
     def __eq__(self, other: Device):
-        if (not isinstance(other, Device)):
+        if not isinstance(other, Device):
             return False
-        
-        return self.id == other.id and \
-            self.type == other.type and \
-            self.station_name == other.station_name and \
-            self.firmware == other.firmware and \
-            len(self.modules) == len(other.modules) and \
-            all([False for i, j in zip(self.modules, other.modules) if i != j])
+
+        return (
+            self.id == other.id
+            and self.type == other.type
+            and self.station_name == other.station_name
+            and self.firmware == other.firmware
+            and len(self.modules) == len(other.modules)
+            and all([False for i, j in zip(self.modules, other.modules) if i != j])
+        )
 
 
 class Module:
@@ -368,14 +443,16 @@ class Module:
         self.measured = Measured(**measured)
 
     def __eq__(self, other: Module):
-        if (not isinstance(other, Module)):
+        if not isinstance(other, Module):
             return False
-        
-        return self.id == other.id and \
-            self.type == other.type and \
-            self.module_name == other.module_name and \
-            self.firmware == other.firmware and \
-            self.battery_percent == other.battery_percent
+
+        return (
+            self.id == other.id
+            and self.type == other.type
+            and self.module_name == other.module_name
+            and self.firmware == other.firmware
+            and self.battery_percent == other.battery_percent
+        )
 
 
 class Program:
@@ -397,7 +474,7 @@ class Program:
         self.timetable = [TimeSlot(**time_slot) for time_slot in timetable]
         self.name = name
         self.selected = selected
-    
+
     def get_active_zone(self) -> Zone | None:
         """Returns a currently active zone for a program."""
 
@@ -410,7 +487,7 @@ class Program:
         for zone in self.zones:
             if zone.id == zone_id:
                 return zone
-        
+
         return None
 
     def get_timeslots_for_today(self) -> list[TimeSlot]:
@@ -425,10 +502,12 @@ class Program:
         for time_slot in self.timetable:
             if time_slot.day == n.weekday():
                 if len(time_slots) == 0 and time_slot.time != time(0, 0):
-                    time_slots.append(TimeSlot(
-                        previous_time_slot_zone_id,
-                        time_slot.day * 1440,
-                    ))
+                    time_slots.append(
+                        TimeSlot(
+                            previous_time_slot_zone_id,
+                            time_slot.day * 1440,
+                        )
+                    )
                 time_slots.append(time_slot)
             previous_time_slot_zone_id = time_slot.id
 
@@ -515,11 +594,29 @@ class Setpoint:
     def __init__(
         self,
         setpoint_activate: bool = False,
+        setpoint_endtime: int | None = None,
         **kwargs,
     ) -> None:
         """Create new setpoint attribute."""
 
         self.setpoint_activate = setpoint_activate
+        if setpoint_endtime is None:
+            self.setpoint_endtime = None
+        else:
+            self.setpoint_endtime = datetime.fromtimestamp(setpoint_endtime)
+
+
+class OutdoorTemperature:
+    def __init__(
+        self,
+        te: float | None = None,
+        ti: int | None = None,
+        **kwargs,
+    ) -> None:
+        """Create new measured attribute."""
+
+        self.temperature = te
+        self.date_updated = datetime.fromtimestamp(ti)
 
 
 class Measured:
@@ -553,20 +650,18 @@ class MeasurementItem:
 
         self.beg_time = beg_time
         self.step_time = step_time
-        self.value = [
-            value_item
-            for inner_list in value
-            for value_item in inner_list
-        ]
+        self.value = [value_item for inner_list in value for value_item in inner_list]
 
     def __eq__(self, other: MeasurementItem):
-        if (not isinstance(other, MeasurementItem)):
+        if not isinstance(other, MeasurementItem):
             return False
-        
-        return self.beg_time == other.beg_time and \
-            self.step_time == other.step_time and \
-            len(self.value) == len(other.value) and \
-            all([False for i, j in zip(self.value, other.value) if i != j])
+
+        return (
+            self.beg_time == other.beg_time
+            and self.step_time == other.step_time
+            and len(self.value) == len(other.value)
+            and all([False for i, j in zip(self.value, other.value) if i != j])
+        )
 
 
 class SystemMode(Enum):
