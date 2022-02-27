@@ -37,13 +37,14 @@ async def thermostat_client(
 ) -> AsyncGenerator[ThermostatClient, None]:
     client = AsyncClient()
     token_store = TokenStore(client_id, client_secret, token, on_token_update)
-    
+
     c = ThermostatClient(client, token_store)
 
     try:
         yield c
     finally:
         await client.aclose()
+
 
 class ThermostatClient(BaseClient):
     """
@@ -261,7 +262,7 @@ class ThermostatClient(BaseClient):
             raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
 
     def _get_setpoint_endtime(
-        self, 
+        self,
         setpoint_mode: SetpointMode,
         activate: bool,
         setpoint_endtime: datetime | None = None,
@@ -281,7 +282,7 @@ class ThermostatClient(BaseClient):
                 return round(setpoint_endtime.timestamp())
 
     def _get_setpoint_temp(
-        self, 
+        self,
         setpoint_mode: SetpointMode,
         activate: bool,
         setpoint_temp: float | None = None,
@@ -314,6 +315,7 @@ class Device:
         setpoint_default_duration: int = _SETPOINT_DEFAULT_DURATION_MINS,
         setpoint_hwb: dict = {},
         modules: list[dict] = [],
+        outdoor_temperature: dict = {},
         **kwargs,
     ) -> None:
         """Create new device model."""
@@ -326,17 +328,20 @@ class Device:
         self.setpoint_default_duration = setpoint_default_duration
         self.setpoint_hwb = Setpoint(**setpoint_hwb)
         self.modules = [Module(**module) for module in modules]
+        self.outdoor_temperature = OutdoorTemperature(**outdoor_temperature)
 
     def __eq__(self, other: Device):
-        if (not isinstance(other, Device)):
+        if not isinstance(other, Device):
             return False
-        
-        return self.id == other.id and \
-            self.type == other.type and \
-            self.station_name == other.station_name and \
-            self.firmware == other.firmware and \
-            len(self.modules) == len(other.modules) and \
-            all([False for i, j in zip(self.modules, other.modules) if i != j])
+
+        return (
+            self.id == other.id
+            and self.type == other.type
+            and self.station_name == other.station_name
+            and self.firmware == other.firmware
+            and len(self.modules) == len(other.modules)
+            and all([False for i, j in zip(self.modules, other.modules) if i != j])
+        )
 
 
 class Module:
@@ -368,14 +373,16 @@ class Module:
         self.measured = Measured(**measured)
 
     def __eq__(self, other: Module):
-        if (not isinstance(other, Module)):
+        if not isinstance(other, Module):
             return False
-        
-        return self.id == other.id and \
-            self.type == other.type and \
-            self.module_name == other.module_name and \
-            self.firmware == other.firmware and \
-            self.battery_percent == other.battery_percent
+
+        return (
+            self.id == other.id
+            and self.type == other.type
+            and self.module_name == other.module_name
+            and self.firmware == other.firmware
+            and self.battery_percent == other.battery_percent
+        )
 
 
 class Program:
@@ -397,7 +404,7 @@ class Program:
         self.timetable = [TimeSlot(**time_slot) for time_slot in timetable]
         self.name = name
         self.selected = selected
-    
+
     def get_active_zone(self) -> Zone | None:
         """Returns a currently active zone for a program."""
 
@@ -410,7 +417,7 @@ class Program:
         for zone in self.zones:
             if zone.id == zone_id:
                 return zone
-        
+
         return None
 
     def get_timeslots_for_today(self) -> list[TimeSlot]:
@@ -425,10 +432,12 @@ class Program:
         for time_slot in self.timetable:
             if time_slot.day == n.weekday():
                 if len(time_slots) == 0 and time_slot.time != time(0, 0):
-                    time_slots.append(TimeSlot(
-                        previous_time_slot_zone_id,
-                        time_slot.day * 1440,
-                    ))
+                    time_slots.append(
+                        TimeSlot(
+                            previous_time_slot_zone_id,
+                            time_slot.day * 1440,
+                        )
+                    )
                 time_slots.append(time_slot)
             previous_time_slot_zone_id = time_slot.id
 
@@ -515,11 +524,29 @@ class Setpoint:
     def __init__(
         self,
         setpoint_activate: bool = False,
+        setpoint_endtime: int | None = None,
         **kwargs,
     ) -> None:
         """Create new setpoint attribute."""
 
         self.setpoint_activate = setpoint_activate
+        if setpoint_endtime is None:
+            self.setpoint_endtime = None
+        else:
+            self.setpoint_endtime = datetime.fromtimestamp(setpoint_endtime)
+
+
+class OutdoorTemperature:
+    def __init__(
+        self,
+        te: float | None = None,
+        ti: int | None = None,
+        **kwargs,
+    ) -> None:
+        """Create new measured attribute."""
+
+        self.temperature = te
+        self.date_updated = datetime.fromtimestamp(ti)
 
 
 class Measured:
@@ -553,20 +580,18 @@ class MeasurementItem:
 
         self.beg_time = beg_time
         self.step_time = step_time
-        self.value = [
-            value_item
-            for inner_list in value
-            for value_item in inner_list
-        ]
+        self.value = [value_item for inner_list in value for value_item in inner_list]
 
     def __eq__(self, other: MeasurementItem):
-        if (not isinstance(other, MeasurementItem)):
+        if not isinstance(other, MeasurementItem):
             return False
-        
-        return self.beg_time == other.beg_time and \
-            self.step_time == other.step_time and \
-            len(self.value) == len(other.value) and \
-            all([False for i, j in zip(self.value, other.value) if i != j])
+
+        return (
+            self.beg_time == other.beg_time
+            and self.step_time == other.step_time
+            and len(self.value) == len(other.value)
+            and all([False for i, j in zip(self.value, other.value) if i != j])
+        )
 
 
 class SystemMode(Enum):
