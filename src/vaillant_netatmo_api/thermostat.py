@@ -82,12 +82,7 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException(
-                "Unknown response error. Check the log for more details.",
-                path=path,
-                data=data,
-                body=body,
-            )
+            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
 
         return [Device(**device) for device in body["body"]["devices"]]
 
@@ -127,14 +122,12 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException(
-                "Unknown response error. Check the log for more details.",
-                path=path,
-                data=data,
-                body=body,
-            )
+            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
 
-        return [MeasurementItem(**measurement) for measurement in body["body"]]
+        return [
+            MeasurementItem(**measurement)
+            for measurement in body["body"]
+        ]
 
     async def async_set_system_mode(
         self, device_id: str, module_id: str, system_mode: SystemMode
@@ -158,12 +151,7 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException(
-                "Unknown response error. Check the log for more details.",
-                path=path,
-                data=data,
-                body=body,
-            )
+            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
 
     async def async_set_minor_mode(
         self,
@@ -202,12 +190,7 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException(
-                "Unknown response error. Check the log for more details.",
-                path=path,
-                data=data,
-                body=body,
-            )
+            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
 
     async def async_sync_schedule(
         self,
@@ -231,26 +214,16 @@ class ThermostatClient(BaseClient):
             "module_id": module_id,
             "schedule_id": schedule_id,
             "name": name,
-            "zones": json.dumps(
-                [
-                    {
-                        "id": zone.id,
-                        # TODO: Should this call include name?
-                        "temp": zone.temp,
-                        "hw": zone.hw,
-                    }
-                    for zone in zones
-                ]
-            ),
-            "timetable": json.dumps(
-                [
-                    {
-                        "id": time_slot.id,
-                        "m_offset": time_slot.m_offset,
-                    }
-                    for time_slot in timetable
-                ]
-            ),
+            "zones": json.dumps([{
+                    "id": zone.id,
+                    # TODO: Should this call include name?
+                    "temp": zone.temp,
+                    "hw": zone.hw,
+                } for zone in zones]),
+            "timetable": json.dumps([{
+                    "id": time_slot.id,
+                    "m_offset": time_slot.m_offset,
+                } for time_slot in timetable]),
         }
 
         body = await self._post(
@@ -259,12 +232,7 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException(
-                "Unknown response error. Check the log for more details.",
-                path=path,
-                data=data,
-                body=body,
-            )
+            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
 
     async def async_switch_schedule(
         self,
@@ -291,12 +259,7 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException(
-                "Unknown response error. Check the log for more details.",
-                path=path,
-                data=data,
-                body=body,
-            )
+            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
 
     def _get_setpoint_endtime(
         self,
@@ -306,34 +269,16 @@ class ThermostatClient(BaseClient):
     ) -> int | None:
         if not activate:
             if setpoint_endtime is not None:
-                raise UnsuportedArgumentsException(
-                    "Provided arguments for setting endtime are not valid.",
-                    setpoint_mode=setpoint_mode,
-                    activate=activate,
-                    setpoint_endtime=setpoint_endtime,
-                )
+                raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
             return None
         else:
             if setpoint_endtime is None:
-                if (
-                    setpoint_mode == SetpointMode.MANUAL
-                    or setpoint_mode == SetpointMode.HWB
-                ):
-                    raise UnsuportedArgumentsException(
-                        "Provided arguments for setting endtime are not valid.",
-                        setpoint_mode=setpoint_mode,
-                        activate=activate,
-                        setpoint_endtime=setpoint_endtime,
-                    )
+                if setpoint_mode == SetpointMode.MANUAL or setpoint_mode == SetpointMode.HWB:
+                    raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
                 return None
             else:
                 if setpoint_endtime <= now():
-                    raise UnsuportedArgumentsException(
-                        "Provided arguments for setting endtime are not valid.",
-                        setpoint_mode=setpoint_mode,
-                        activate=activate,
-                        setpoint_endtime=setpoint_endtime,
-                    )
+                    raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
                 return round(setpoint_endtime.timestamp())
 
     def _get_setpoint_temp(
@@ -344,31 +289,16 @@ class ThermostatClient(BaseClient):
     ) -> float | None:
         if not activate:
             if setpoint_temp is not None:
-                raise UnsuportedArgumentsException(
-                    "Provided arguments for setting temp are not valid.",
-                    setpoint_mode=setpoint_mode,
-                    activate=activate,
-                    setpoint_temp=setpoint_temp,
-                )
+                raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
             return None
         else:
             if setpoint_temp is None:
                 if setpoint_mode == SetpointMode.MANUAL:
-                    raise UnsuportedArgumentsException(
-                        "Provided arguments for setting temp are not valid.",
-                        setpoint_mode=setpoint_mode,
-                        activate=activate,
-                        setpoint_temp=setpoint_temp,
-                    )
+                    raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
                 return None
             else:
                 if setpoint_mode != SetpointMode.MANUAL:
-                    raise UnsuportedArgumentsException(
-                        "Provided arguments for setting temp are not valid.",
-                        setpoint_mode=setpoint_mode,
-                        activate=activate,
-                        setpoint_temp=setpoint_temp,
-                    )
+                    raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
                 return setpoint_temp
 
 
