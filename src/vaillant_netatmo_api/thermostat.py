@@ -530,6 +530,8 @@ class Measured:
         temperature: float | None = None,
         setpoint_temp: float | None = None,
         est_setpoint_temp: float | None = None,
+        gas_heating_usage: list[float] | None = None,
+        gas_water_usage: list[float] | None = None,
         **kwargs,
     ) -> None:
         """Create new measured attribute."""
@@ -537,6 +539,8 @@ class Measured:
         self.temperature = temperature
         self.setpoint_temp = setpoint_temp
         self.est_setpoint_temp = est_setpoint_temp
+        self.gas_heating_usage = gas_heating_usage
+        self.gas_water_usage = gas_water_usage
 
 
 class MeasurementItem:
