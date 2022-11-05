@@ -317,6 +317,9 @@ class Device:
         type: str = "",
         station_name: str = "",
         firmware: int = 0,
+        dhw: float | None = None,
+        dhw_max: float | None = None,
+        dhw_min: float | None = None,
         system_mode: str | None = None,
         setpoint_default_duration: int = _SETPOINT_DEFAULT_DURATION_MINS,
         setpoint_hwb: dict = {},
@@ -330,11 +333,14 @@ class Device:
         self.type = type
         self.station_name = station_name
         self.firmware = firmware
+        self.dhw = dhw
+        self.dhw_max = dhw_max
+        self.dhw_min = dhw_min
+        self.outdoor_temperature = OutdoorTemperature(**outdoor_temperature)
         self.system_mode = SystemMode(system_mode)
         self.setpoint_default_duration = setpoint_default_duration
         self.setpoint_hwb = Setpoint(**setpoint_hwb)
         self.modules = [Module(**module) for module in modules]
-        self.outdoor_temperature = OutdoorTemperature(**outdoor_temperature)
 
     def __eq__(self, other: Device):
         if not isinstance(other, Device):
@@ -387,7 +393,6 @@ class Module:
             and self.type == other.type
             and self.module_name == other.module_name
             and self.firmware == other.firmware
-            and self.battery_percent == other.battery_percent
         )
 
 
