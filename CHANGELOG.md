@@ -2,6 +2,15 @@
 
 <!--next-version-placeholder-->
 
+## v0.9.0 (2022-11-05)
+### Feature
+* Add wifi and rf radio statuses. ([`cde33c1`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/cde33c1772a47800d06ac0b07efbb0c40ae37baf))
+* Add domestic hot water temperature data: current, max and min. ([`40f3d19`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/40f3d1918d04c931a36af2d611b2efea09f66e5c))
+* Add outdoor temperature and setpoint endtime data to getthermostatsdata output ([`2735563`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/273556371b88871fcd580a2bc763106777aa4f33))
+
+### Fix
+* Add data_amount and sync_device_id params for getthermostatsdata API call to trigger a sync every time a request is made ([`348976f`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/348976fb38595f0329ef8bbfb5d56f9ede6c19dd))
+
 ## v0.8.1 (2022-01-22)
 ### Fix
 * Removes custom headers and params for caching workaround ([`c6af9ab`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/c6af9ab1958579c3fe15224904681042cad78148))
