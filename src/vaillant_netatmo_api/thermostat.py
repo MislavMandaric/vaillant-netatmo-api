@@ -551,8 +551,8 @@ class OutdoorTemperature:
     ) -> None:
         """Create new measured attribute."""
 
-        self.temperature = te
-        self.date_updated = datetime.fromtimestamp(ti)
+        self.te = te
+        self.ti = datetime.fromtimestamp(ti)
 
 
 class Measured:

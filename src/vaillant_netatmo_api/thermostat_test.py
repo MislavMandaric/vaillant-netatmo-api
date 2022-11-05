@@ -39,9 +39,13 @@ get_thermostats_data_response = {
                 "type": "type",
                 "station_name": "station_name",
                 "firmware": "firmware",
+                "outdoor_temperature": {
+                    "te": 11,
+                    "ti": 1667636447,
+                },
                 "system_mode": "summer",
                 "setpoint_default_duration": 120,
-                "setpoint_hwb": {"setpoint_activate": False},
+                "setpoint_hwb": {"setpoint_activate": False, "setpoint_endtime": 1642056298},
                 "modules": [
                     {
                         "_id": "id",
@@ -49,8 +53,8 @@ get_thermostats_data_response = {
                         "module_name": "module_name",
                         "firmware": "firmware",
                         "battery_percent": 80,
-                        "setpoint_away": {"setpoint_activate": False},
-                        "setpoint_manual": {"setpoint_activate": False},
+                        "setpoint_away": {"setpoint_activate": False, "setpoint_endtime": 1642056298},
+                        "setpoint_manual": {"setpoint_activate": False, "setpoint_endtime": 1642056298},
                         "therm_program_list": [
                             {
                                 "zones": [{"temp": 20, "id": 0, "hw": True}],
