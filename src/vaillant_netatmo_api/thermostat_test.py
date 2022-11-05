@@ -39,6 +39,9 @@ get_thermostats_data_response = {
                 "type": "type",
                 "station_name": "station_name",
                 "firmware": "firmware",
+                "dhw": 55,
+                "dhw_max": 65,
+                "dhw_min": 35,
                 "outdoor_temperature": {
                     "te": 11,
                     "ti": 1667636447,
