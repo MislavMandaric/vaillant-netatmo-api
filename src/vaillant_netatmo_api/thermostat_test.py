@@ -39,15 +39,16 @@ get_thermostats_data_response = {
                 "type": "type",
                 "station_name": "station_name",
                 "firmware": "firmware",
+                "wifi_status": 60,
                 "dhw": 55,
                 "dhw_max": 65,
                 "dhw_min": 35,
+                "setpoint_default_duration": 120,
                 "outdoor_temperature": {
                     "te": 11,
                     "ti": 1667636447,
                 },
                 "system_mode": "summer",
-                "setpoint_default_duration": 120,
                 "setpoint_hwb": {"setpoint_activate": False, "setpoint_endtime": 1642056298},
                 "modules": [
                     {
@@ -55,6 +56,7 @@ get_thermostats_data_response = {
                         "type": "type",
                         "module_name": "module_name",
                         "firmware": "firmware",
+                        "rf_status": 70,
                         "battery_percent": 80,
                         "setpoint_away": {"setpoint_activate": False, "setpoint_endtime": 1642056298},
                         "setpoint_manual": {"setpoint_activate": False, "setpoint_endtime": 1642056298},
