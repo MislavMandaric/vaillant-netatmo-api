@@ -6,7 +6,7 @@ import os
 from httpx import AsyncClient
 from dotenv import load_dotenv
 
-from src.vaillant_netatmo_api import AuthClient, ThermostatClient, TokenStore, SetpointMode
+from src.vaillant_netatmo_api import AuthClient, ThermostatClient, TokenStore, Token
 
 load_dotenv()
 
@@ -22,14 +22,18 @@ async def main():
         token_store = TokenStore(
             client_id,
             client_secret,
-            None,
+            Token({
+                "access_token": None,
+                "refresh_token": None,
+            }),
             handle_token_update
         )
         await async_get_token(client, token_store)
         await async_call_api(client, token_store)
 
 def handle_token_update(token):
-    ...
+        print(token.access_token)
+        print(token.refresh_token)
 
 async def async_get_token(client, token_store):
     client = AuthClient(client, token_store)
@@ -45,11 +49,7 @@ async def async_call_api(client, token_store):
     client = ThermostatClient(client, token_store)
 
     devices = await client.async_get_thermostats_data()
-
-    d_id = devices[0].id
-    m_id = devices[0].modules[0].id
-
-    await client.async_set_minor_mode(d_id, m_id, SetpointMode.MANUAL, False)
+    print(devices[0].modules[0].measured.temperature)
 
 if __name__ == "__main__":
     asyncio.run(main())

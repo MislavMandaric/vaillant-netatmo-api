@@ -24,6 +24,8 @@ _SET_MINOR_MODE_PATH = "api/setminormode"
 _SYNC_SCHEDULE_PATH = "api/syncschedule"
 _SWITCH_SCHEDULE_PATH = "api/switchschedule"
 _VAILLANT_DEVICE_TYPE = "NAVaillant"
+_VAILLANT_DATA_AMOUNT = "app"
+_VAILLANT_SYNC_DEVICE_ID = "all"
 _RESPONSE_STATUS_OK = "ok"
 _SETPOINT_DEFAULT_DURATION_MINS = 120
 
@@ -73,7 +75,11 @@ class ThermostatClient(BaseClient):
         """
 
         path = _GET_THERMOSTATS_DATA_PATH
-        data = {"device_type": _VAILLANT_DEVICE_TYPE}
+        data = {
+            "device_type": _VAILLANT_DEVICE_TYPE,
+            "data_amount": _VAILLANT_DATA_AMOUNT,
+            "sync_device_id": _VAILLANT_SYNC_DEVICE_ID,
+        }
 
         body = await self._post(
             path,

@@ -18,11 +18,15 @@ token = Token({
 
 get_thermostats_data_request = {
     "device_type": "NAVaillant",
+    "data_amount": "app",
+    "sync_device_id": "all",
     "access_token": "12345",
 }
 
 get_thermostats_data_refreshed_request = {
     "device_type": "NAVaillant",
+    "data_amount": "app",
+    "sync_device_id": "all",
     "access_token": "67890",
 }
 
