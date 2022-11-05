@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.9.1 (2022-11-05)
+### Fix
+* Improve dependabot commits with semantic release ([`c0b826e`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/c0b826e284f8b9776544ef9c2cea9e6cc4f9958c))
+
 ## v0.9.0 (2022-11-05)
 ### Feature
 * Add wifi and rf radio statuses. ([`cde33c1`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/cde33c1772a47800d06ac0b07efbb0c40ae37baf))
