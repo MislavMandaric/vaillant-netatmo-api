@@ -317,14 +317,15 @@ class Device:
         type: str = "",
         station_name: str = "",
         firmware: int = 0,
+        wifi_status: int = 0,
         dhw: float | None = None,
         dhw_max: float | None = None,
         dhw_min: float | None = None,
-        system_mode: str | None = None,
         setpoint_default_duration: int = _SETPOINT_DEFAULT_DURATION_MINS,
+        outdoor_temperature: dict = {},
+        system_mode: str | None = None,
         setpoint_hwb: dict = {},
         modules: list[dict] = [],
-        outdoor_temperature: dict = {},
         **kwargs,
     ) -> None:
         """Create new device model."""
@@ -333,12 +334,13 @@ class Device:
         self.type = type
         self.station_name = station_name
         self.firmware = firmware
+        self.wifi_status = wifi_status
         self.dhw = dhw
         self.dhw_max = dhw_max
         self.dhw_min = dhw_min
+        self.setpoint_default_duration = setpoint_default_duration
         self.outdoor_temperature = OutdoorTemperature(**outdoor_temperature)
         self.system_mode = SystemMode(system_mode)
-        self.setpoint_default_duration = setpoint_default_duration
         self.setpoint_hwb = Setpoint(**setpoint_hwb)
         self.modules = [Module(**module) for module in modules]
 
@@ -365,6 +367,7 @@ class Module:
         type: str = "",
         module_name: str = "",
         firmware: int = 0,
+        rf_status: int = 0,
         battery_percent: int = 0,
         setpoint_away: dict = {},
         setpoint_manual: dict = {},
@@ -378,6 +381,7 @@ class Module:
         self.type = type
         self.module_name = module_name
         self.firmware = firmware
+        self.rf_status = rf_status
         self.battery_percent = battery_percent
         self.setpoint_away = Setpoint(**setpoint_away)
         self.setpoint_manual = Setpoint(**setpoint_manual)
