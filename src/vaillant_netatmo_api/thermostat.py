@@ -572,6 +572,10 @@ class Measured:
         temperature: float | None = None,
         setpoint_temp: float | None = None,
         est_setpoint_temp: float | None = None,
+        gas_heating_usage: list[float] | None = None,
+        gas_water_usage: list[float] | None = None,
+        elec_heating_usage: list[float] | None = None,
+        elec_water_usage: list[float] | None = None,
         **kwargs,
     ) -> None:
         """Create new measured attribute."""
@@ -579,6 +583,10 @@ class Measured:
         self.temperature = temperature
         self.setpoint_temp = setpoint_temp
         self.est_setpoint_temp = est_setpoint_temp
+        self.gas_heating_usage = gas_heating_usage
+        self.gas_water_usage = gas_water_usage
+        self.elec_heating_usage = elec_heating_usage
+        self.elec_water_usage = elec_water_usage
 
 
 class MeasurementItem:
@@ -632,11 +640,20 @@ class MeasurementType(Enum):
     SETPOINT_TEMPERATURE = "sp_temperature"
     SUM_BOILER_ON = "sum_boiler_on"
     SUM_BOILER_OFF = "sum_boiler_off"
-
+    SUM_ENERGY_GAS_HEATING = "sum_energy_gaz_heating"
+    SUM_ENERGY_GAS_WATER = "sum_energy_gaz_hot_water"
+    SUM_ENERGY_ELEC_HEATING = "sum_energy_elec_heating"
+    SUM_ENERGY_ELEC_WATER = "sum_energy_elec_hot_water"    
 
 class MeasurementScale(Enum):
     """MeasurementScale enumeration representing possible scale options for measurements of the thermostat."""
 
     MAX = "max"
+    MIN_5 = "5min"
     HALF_HOUR = "30min"
     HOUR = "1hour"
+    HOURS_3 = "3hours"
+    HOURS_6 = "6hours"
+    DAY = "1day"
+    WEEK = "1week"
+    MONTH = "1month"
