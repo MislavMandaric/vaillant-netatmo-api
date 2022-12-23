@@ -373,6 +373,7 @@ class Module:
         setpoint_manual: dict = {},
         therm_program_list: list[dict] = [],
         measured: dict = {},
+        energy_usage: dict = {},
         **kwargs,
     ) -> None:
         """Create new module model."""
@@ -385,8 +386,10 @@ class Module:
         self.battery_percent = battery_percent
         self.setpoint_away = Setpoint(**setpoint_away)
         self.setpoint_manual = Setpoint(**setpoint_manual)
-        self.therm_program_list = [Program(**program) for program in therm_program_list]
+        self.therm_program_list = [
+            Program(**program) for program in therm_program_list]
         self.measured = Measured(**measured)
+        self.energy_usage = EnergyUsage(**energy_usage)
 
     def __eq__(self, other: Module):
         if not isinstance(other, Module):
@@ -561,7 +564,27 @@ class OutdoorTemperature:
         """Create new measured attribute."""
 
         self.te = te
-        self.ti = datetime.fromtimestamp(ti)
+        if ti is None:
+            self.ti = None
+        else:
+            self.ti = datetime.fromtimestamp(ti)
+
+
+class EnergyUsage:
+    def __init__(
+        self,
+        gas_heating_usage: list[float] | None = None,
+        gas_water_usage: list[float] | None = None,
+        elec_heating_usage: list[float] | None = None,
+        elec_water_usage: list[float] | None = None,
+        **kwargs,
+    ) -> None:
+        """Create energy usage attribute."""
+
+        self.gas_heating_usage = gas_heating_usage
+        self.gas_water_usage = gas_water_usage
+        self.elec_heating_usage = elec_heating_usage
+        self.elec_water_usage = elec_water_usage
 
 
 class Measured:
@@ -572,10 +595,6 @@ class Measured:
         temperature: float | None = None,
         setpoint_temp: float | None = None,
         est_setpoint_temp: float | None = None,
-        gas_heating_usage: list[float] | None = None,
-        gas_water_usage: list[float] | None = None,
-        elec_heating_usage: list[float] | None = None,
-        elec_water_usage: list[float] | None = None,
         **kwargs,
     ) -> None:
         """Create new measured attribute."""
@@ -583,10 +602,6 @@ class Measured:
         self.temperature = temperature
         self.setpoint_temp = setpoint_temp
         self.est_setpoint_temp = est_setpoint_temp
-        self.gas_heating_usage = gas_heating_usage
-        self.gas_water_usage = gas_water_usage
-        self.elec_heating_usage = elec_heating_usage
-        self.elec_water_usage = elec_water_usage
 
 
 class MeasurementItem:
@@ -640,20 +655,22 @@ class MeasurementType(Enum):
     SETPOINT_TEMPERATURE = "sp_temperature"
     SUM_BOILER_ON = "sum_boiler_on"
     SUM_BOILER_OFF = "sum_boiler_off"
+
     SUM_ENERGY_GAS_HEATING = "sum_energy_gaz_heating"
     SUM_ENERGY_GAS_WATER = "sum_energy_gaz_hot_water"
     SUM_ENERGY_ELEC_HEATING = "sum_energy_elec_heating"
-    SUM_ENERGY_ELEC_WATER = "sum_energy_elec_hot_water"    
+    SUM_ENERGY_ELEC_WATER = "sum_energy_elec_hot_water"
+
 
 class MeasurementScale(Enum):
     """MeasurementScale enumeration representing possible scale options for measurements of the thermostat."""
 
     MAX = "max"
-    MIN_5 = "5min"
+    FIVE_MINS = "5min"
     HALF_HOUR = "30min"
     HOUR = "1hour"
-    HOURS_3 = "3hours"
-    HOURS_6 = "6hours"
+    THREE_HOURS = "3hours"
+    SIX_HOURS = "6hours"
     DAY = "1day"
     WEEK = "1week"
     MONTH = "1month"

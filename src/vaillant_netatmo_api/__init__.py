@@ -18,6 +18,7 @@ from .errors import (
 from .thermostat import (
     Device,
     Measured,
+    EnergyUsage,
     MeasurementItem,
     MeasurementScale,
     MeasurementType,
@@ -54,6 +55,7 @@ __all__ = [
     "Zone",
     "TimeSlot",
     "Setpoint",
+    "EnergyUsage",
     "Measured",
     "MeasurementItem",
     "MeasurementType",
