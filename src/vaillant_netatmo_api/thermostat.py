@@ -373,6 +373,7 @@ class Module:
         setpoint_manual: dict = {},
         therm_program_list: list[dict] = [],
         measured: dict = {},
+        boiler_status: bool = False,
         **kwargs,
     ) -> None:
         """Create new module model."""
@@ -387,6 +388,7 @@ class Module:
         self.setpoint_manual = Setpoint(**setpoint_manual)
         self.therm_program_list = [Program(**program) for program in therm_program_list]
         self.measured = Measured(**measured)
+        self.boiler_status = boiler_status
 
     def __eq__(self, other: Module):
         if not isinstance(other, Module):
