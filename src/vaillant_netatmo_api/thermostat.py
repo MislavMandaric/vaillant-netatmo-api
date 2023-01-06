@@ -373,7 +373,7 @@ class Module:
         setpoint_manual: dict = {},
         therm_program_list: list[dict] = [],
         measured: dict = {},
-        boiler_status: bool | None = None,
+        boiler_status: bool = False,
         **kwargs,
     ) -> None:
         """Create new module model."""
