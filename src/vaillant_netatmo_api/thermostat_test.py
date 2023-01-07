@@ -57,6 +57,7 @@ get_thermostats_data_response = {
                         "module_name": "module_name",
                         "firmware": "firmware",
                         "rf_status": 70,
+                        "boiler_status": True,
                         "battery_percent": 80,
                         "setpoint_away": {"setpoint_activate": False, "setpoint_endtime": 1642056298},
                         "setpoint_manual": {"setpoint_activate": False, "setpoint_endtime": 1642056298},
@@ -139,6 +140,16 @@ switch_schedule_request = {
 }
 
 switch_schedule_response = {
+    "status": "ok",
+}
+
+async_set_hot_water_temperature_request = {
+    "device_id": "device",
+    "dhw": 50,
+    "access_token": "12345",
+}
+
+async_set_hot_water_temperature_response = {
     "status": "ok",
 }
 
@@ -741,4 +752,37 @@ class TestThermostat:
                 sync_schedule_request["device_id"],
                 sync_schedule_request["module_id"],
                 sync_schedule_request["schedule_id"],
+            )
+
+    async def test_async_set_hot_water_temperature__invalid_request_params__raises_error(self, respx_mock: MockRouter):
+        respx_mock.post("https://api.netatmo.com/api/sethotwatertemperature", data=async_set_hot_water_temperature_request).respond(400)
+
+        async with thermostat_client("", "", token, None) as client:
+            with pytest.raises(RequestClientException):
+                await client.async_set_hot_water_temperature(
+                    async_set_hot_water_temperature_request["device_id"],
+                    async_set_hot_water_temperature_request["dhw"],
+                )
+
+    async def test_async_set_hot_water_temperature__server_errors__retry_until_success(self, respx_mock: MockRouter):
+        respx_mock.post("https://api.netatmo.com/api/sethotwatertemperature", data=async_set_hot_water_temperature_request).mock(side_effect=[
+            httpx.Response(500),
+            httpx.Response(200, json=async_set_hot_water_temperature_response),
+        ])
+
+        async with thermostat_client("", "", token, None) as client:
+            await client.async_set_hot_water_temperature(
+                async_set_hot_water_temperature_request["device_id"],
+                async_set_hot_water_temperature_request["dhw"],
+            )
+
+            assert respx_mock.calls.call_count == 2
+
+    async def test_async_set_hot_water_temperature__valid_request_params__doesnt_raise_error(self, respx_mock: MockRouter):
+        respx_mock.post("https://api.netatmo.com/api/sethotwatertemperature", data=async_set_hot_water_temperature_request).respond(200, json=async_set_hot_water_temperature_response)
+
+        async with thermostat_client("", "", token, None) as client:
+            await client.async_set_hot_water_temperature(
+                async_set_hot_water_temperature_request["device_id"],
+                async_set_hot_water_temperature_request["dhw"],
             )
