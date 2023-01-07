@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.10.0 (2023-01-07)
+### Feature
+* New domestic hot water temperature configuration endpoint ([`6abc188`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/6abc18805e76ac2129b6ae862b4eed02fd85a8a9))
+
 ## v0.9.1 (2022-11-05)
 ### Fix
 * Improve dependabot commits with semantic release ([`c0b826e`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/c0b826e284f8b9776544ef9c2cea9e6cc4f9958c))
