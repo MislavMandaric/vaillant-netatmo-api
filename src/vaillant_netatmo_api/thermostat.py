@@ -274,7 +274,8 @@ class ThermostatClient(BaseClient):
         dhw: int,
     ) -> None:
         """
-        Change the thermostat's active schedule to the provided value.
+        Update boilers's domestic hot water temperature to the provided value. Value should be in valid range which can be retrieved
+        by calling /api/getthermostatsdata.
 
         On success, returns nothing. On error, throws an exception.
         """
