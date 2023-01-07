@@ -57,6 +57,7 @@ get_thermostats_data_response = {
                         "module_name": "module_name",
                         "firmware": "firmware",
                         "rf_status": 70,
+                        "boiler_status": True,
                         "battery_percent": 80,
                         "setpoint_away": {"setpoint_activate": False, "setpoint_endtime": 1642056298},
                         "setpoint_manual": {"setpoint_activate": False, "setpoint_endtime": 1642056298},
