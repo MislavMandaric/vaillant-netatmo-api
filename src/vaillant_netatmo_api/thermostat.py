@@ -373,7 +373,6 @@ class Module:
         setpoint_manual: dict = {},
         therm_program_list: list[dict] = [],
         measured: dict = {},
-        energy_usage: dict = {},
         **kwargs,
     ) -> None:
         """Create new module model."""
@@ -389,7 +388,6 @@ class Module:
         self.therm_program_list = [
             Program(**program) for program in therm_program_list]
         self.measured = Measured(**measured)
-        self.energy_usage = EnergyUsage(**energy_usage)
 
     def __eq__(self, other: Module):
         if not isinstance(other, Module):
@@ -568,23 +566,6 @@ class OutdoorTemperature:
             self.ti = None
         else:
             self.ti = datetime.fromtimestamp(ti)
-
-
-class EnergyUsage:
-    def __init__(
-        self,
-        gas_heating_usage: list[float] | None = None,
-        gas_water_usage: list[float] | None = None,
-        elec_heating_usage: list[float] | None = None,
-        elec_water_usage: list[float] | None = None,
-        **kwargs,
-    ) -> None:
-        """Create energy usage attribute."""
-
-        self.gas_heating_usage = gas_heating_usage
-        self.gas_water_usage = gas_water_usage
-        self.elec_heating_usage = elec_heating_usage
-        self.elec_water_usage = elec_water_usage
 
 
 class Measured:
