@@ -54,3 +54,22 @@ class BaseClient:
 
             resp.raise_for_status()
             return resp.json()
+    async def _json_post(self, path: str, data: dict) -> dict:
+        """
+        Makes json post request using the underlying httpx AsyncClient, with the defaut timeout of 15s.
+        
+        In case of retryable exceptions, requests are retryed for up to 10 times or 5 minutes.
+        """
+        # dirty trick 
+        headers={"Authorization":f"Bearer {self._auth._token_store.token.access_token}"}
+
+        with client_error_handler():
+            resp = await self._client.post(
+                f"{_API_HOST}{path}",
+                headers=headers,
+                json=data,
+                timeout=15.0,
+            )
+
+            resp.raise_for_status()
+            return resp.json()

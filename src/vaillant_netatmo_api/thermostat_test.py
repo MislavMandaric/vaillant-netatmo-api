@@ -153,6 +153,34 @@ async_set_hot_water_temperature_response = {
     "status": "ok",
 }
 
+async_get_dhw_data_request = {
+    "device_id": "device",
+    "home_id": "home_id",
+}
+
+async_get_dhw_data_response = {
+    "status": "ok",
+}
+
+async_set_dhw_data_request = {
+    "device_id": "device",
+    "dhw": 50,
+    "access_token": "12345",
+    "home": {
+        "modules":[
+            {
+                "dhw_always_on":True,
+                "id":"device"
+            }
+        ],
+    "id": "home_id"
+    }
+}
+
+async_set_dhw_data_response = {
+    "status": "ok",
+}
+
 refresh_token_request = {
     "grant_type": "refresh_token",
     "client_id": "client",

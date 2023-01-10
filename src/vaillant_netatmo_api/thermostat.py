@@ -24,6 +24,8 @@ _SET_MINOR_MODE_PATH = "api/setminormode"
 _SYNC_SCHEDULE_PATH = "api/syncschedule"
 _SWITCH_SCHEDULE_PATH = "api/switchschedule"
 _SET_HOT_WATER_TEMPERATURE_PATH = "api/sethotwatertemperature"
+_SET_DHW_DATA_PATH="api/setconfigs"
+_GET_DHW_DATA_PATH="api/getconfigs"
 _VAILLANT_DEVICE_TYPE = "NAVaillant"
 _VAILLANT_DATA_AMOUNT = "app"
 _VAILLANT_SYNC_DEVICE_ID = "all"
@@ -92,6 +94,65 @@ class ThermostatClient(BaseClient):
             raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
 
         return [Device(**device) for device in body["body"]["devices"]]
+
+    async def async_get_dhw_data(
+        self,
+        device_id: str,
+        home_id: str,
+    ) -> None:
+        """
+        Get DHW data from the Netatmo API.
+
+        """
+
+        path = _GET_DHW_DATA_PATH
+        data = {
+            "device_id": device_id,
+            "home_id": home_id,
+        }
+
+        body = await self._post(
+            path,
+            data=data,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+
+        return body["body"]["home"]["modules"][0]["dhw_always_on"]
+
+    async def async_set_dhw_data(
+        self,
+        device_id: str,
+        home_id: str,
+        dhw_always_on: bool,
+    ) -> None:
+        """
+        Set DHW data as json post to the Netatmo API.
+
+        """
+
+        path = _SET_DHW_DATA_PATH
+        data = {
+            "home": {
+                "modules":[
+                    {
+                        "dhw_always_on":dhw_always_on,
+                        "id":device_id
+                    }
+                ],
+                "id": home_id
+            }
+        }
+
+        body = await self._json_post(
+            path,
+            data=data,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+
 
     async def async_get_measure(
         self,
@@ -353,6 +414,11 @@ class Device:
         system_mode: str | None = None,
         setpoint_hwb: dict = {},
         modules: list[dict] = [],
+        dhw_enabled: bool | None = None,
+        home_id: str = "",
+        boiler_id: str = "",
+        dhw_always_on: bool | None = None,
+        ebus_status: dict = {},
         **kwargs,
     ) -> None:
         """Create new device model."""
@@ -370,6 +436,12 @@ class Device:
         self.system_mode = SystemMode(system_mode)
         self.setpoint_hwb = Setpoint(**setpoint_hwb)
         self.modules = [Module(**module) for module in modules]
+        self.home_id = home_id
+        self.boiler_id = boiler_id
+        self.dhw_always_on = dhw_always_on # this should be set later by entity update_method->_client.async_get_dhw_data
+        self.dhw_enabled = dhw_enabled
+        self.ebus_status = EbusStatus(**ebus_status)
+
 
     def __eq__(self, other: Device):
         if not isinstance(other, Device):
@@ -400,6 +472,7 @@ class Module:
         setpoint_manual: dict = {},
         therm_program_list: list[dict] = [],
         measured: dict = {},
+        anticipating: bool | None = None,
         boiler_status: bool = False,
         **kwargs,
     ) -> None:
@@ -416,6 +489,7 @@ class Module:
         self.therm_program_list = [Program(**program) for program in therm_program_list]
         self.measured = Measured(**measured)
         self.boiler_status = boiler_status
+        self.anticipating = anticipating
 
     def __eq__(self, other: Module):
         if not isinstance(other, Module):
@@ -579,6 +653,24 @@ class Setpoint:
         else:
             self.setpoint_endtime = datetime.fromtimestamp(setpoint_endtime)
 
+class EbusStatus:
+    """eBUS status attributes representing error status, maintenance, refill_water and emf_avail status."""
+    def __init__(
+        self,
+        ebus_error: bool | None = None,
+        boiler_error: bool | None = None,
+        maintenance_status: bool | None = None,
+        refill_water: bool | None = None,
+        emf_avail: bool | None = None,
+        **kwargs,
+    ) -> None:
+        """Create new Boiler status attributes."""
+
+        self.ebus_error = ebus_error
+        self.boiler_error = boiler_error
+        self.maintenance_status = maintenance_status
+        self.refill_water = refill_water
+        self.emf_avail = emf_avail
 
 class OutdoorTemperature:
     def __init__(
