@@ -413,7 +413,8 @@ class Module:
         self.battery_percent = battery_percent
         self.setpoint_away = Setpoint(**setpoint_away)
         self.setpoint_manual = Setpoint(**setpoint_manual)
-        self.therm_program_list = [Program(**program) for program in therm_program_list]
+        self.therm_program_list = [
+            Program(**program) for program in therm_program_list]
         self.measured = Measured(**measured)
         self.boiler_status = boiler_status
 
@@ -590,7 +591,10 @@ class OutdoorTemperature:
         """Create new measured attribute."""
 
         self.te = te
-        self.ti = datetime.fromtimestamp(ti)
+        if ti is None:
+            self.ti = None
+        else:
+            self.ti = datetime.fromtimestamp(ti)
 
 
 class Measured:
@@ -662,10 +666,21 @@ class MeasurementType(Enum):
     SUM_BOILER_ON = "sum_boiler_on"
     SUM_BOILER_OFF = "sum_boiler_off"
 
+    SUM_ENERGY_GAS_HEATING = "sum_energy_gaz_heating"
+    SUM_ENERGY_GAS_WATER = "sum_energy_gaz_hot_water"
+    SUM_ENERGY_ELEC_HEATING = "sum_energy_elec_heating"
+    SUM_ENERGY_ELEC_WATER = "sum_energy_elec_hot_water"
+
 
 class MeasurementScale(Enum):
     """MeasurementScale enumeration representing possible scale options for measurements of the thermostat."""
 
     MAX = "max"
+    FIVE_MINS = "5min"
     HALF_HOUR = "30min"
     HOUR = "1hour"
+    THREE_HOURS = "3hours"
+    SIX_HOURS = "6hours"
+    DAY = "1day"
+    WEEK = "1week"
+    MONTH = "1month"
