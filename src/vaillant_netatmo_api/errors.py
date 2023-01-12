@@ -100,11 +100,10 @@ def _sanitize_request(request: Request) -> dict:
     return {
         "method": request.method,
         "url": request.url,
-        "body": sub(
-                    rb"access_token=.+?(&|$)",
-                    rb"access_token=<FILTERED>&",
-                    sub(rb"password=.+?(&|$)", rb"password=<FILTERED>&", request.content)
-                ),
+        "body": _sanitize_params(
+            request.content,
+            [b"client_secret", b"password", b"access_token", b"refresh_token"],
+        )
     }
 
 def _sanitize_response(response: Response) -> dict:
@@ -117,3 +116,14 @@ def _sanitize_response(response: Response) -> dict:
         "body": response.content,
         "duration": response.elapsed,
     }
+
+def _sanitize_params(body: bytes, params: list[bytes]) -> str:
+    param_value_before = rb".+?(&|$)"
+    param_value_after = rb"<FILTERED>&"
+
+    result = body
+    for param in params:
+        before = param + rb"=" + param_value_before
+        after = param + rb"=" + param_value_after
+        result = sub(before, after, result)
+    return result

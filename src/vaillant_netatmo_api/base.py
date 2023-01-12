@@ -37,7 +37,7 @@ class BaseClient:
         wait=wait_random_exponential(multiplier=1, max=30),
         reraise=True,
     )
-    async def _post(self, path: str, data: dict) -> dict:
+    async def _post(self, path: str, data: dict = None, json: dict = None) -> dict:
         """
         Makes post request using the underlying httpx AsyncClient, with the defaut timeout of 15s.
         
@@ -48,6 +48,7 @@ class BaseClient:
             resp = await self._client.post(
                 f"{_API_HOST}{path}",
                 data=data,
+                json=json,
                 auth=self._auth,
                 timeout=15.0,
             )

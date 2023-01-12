@@ -47,8 +47,14 @@ class ThermostatAuth(Auth):
     def _get_access_token_request(self, request: Request) -> Request:
         method = request.method
         url = request.url
-        content = self._content_with_access_token(request.content)
-        headers = self._headers_without_content_length(request.headers)
+        content = request.content
+        headers = request.headers
+
+        if self._is_content_type_json(request):
+            headers = self._headers_with_bearer_token(request.headers)
+        else:
+            content = self._content_with_access_token(request.content)
+            headers = self._headers_without_content_length(request.headers)
 
         return Request(
             method,
@@ -71,6 +77,19 @@ class ThermostatAuth(Auth):
     def _process_refresh_response(self, response: Response) -> None:
         if not response.is_error:
             self._token_store.token = Token(response.json())
+    
+    def _is_content_type_json(self, request: Request) -> bool:
+        if request.headers.get("content-type") == "application/json":
+            return True
+        return False
+
+    def _headers_with_bearer_token(self, headers: Headers) -> Headers:
+        headers = headers.copy()
+        if self._token_store.token is not None:
+            key = "authorization"
+            value = f"Bearer {self._token_store.token.access_token}"
+            headers.update(key, value)
+        return headers
 
     def _headers_without_content_length(self, headers: Headers) -> Headers:
         headers = headers.copy()
