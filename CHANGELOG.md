@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v0.11.0 (2023-02-27)
+### Feature
+* Enable sending JSON requests with bearer token authentication ([`e95a486`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/e95a48612aed21c961e5e8af0acb9593b4ef5d73))
+* Support for getting gas and electric usage measurements ([`78385cc`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/78385cc83d939984e892f678cec72dd48248bdc6))
+
+### Fix
+* Bump relekang/python-semantic-release from 7.32.2 to 7.33.2 ([`2fe42d4`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/2fe42d48dcebe126891f5df10821eaaaa4a9a528))
+
 ## v0.10.0 (2023-01-07)
 ### Feature
 * New domestic hot water temperature configuration endpoint ([`6abc188`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/6abc18805e76ac2129b6ae862b4eed02fd85a8a9))
