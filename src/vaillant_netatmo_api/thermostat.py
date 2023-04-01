@@ -223,7 +223,8 @@ class ThermostatClient(BaseClient):
             "name": name,
             "zones": json.dumps([{
                     "id": zone.id,
-                    # TODO: Should this call include name?
+                    "type": zone.type,
+                    "name": zone.name if zone.type == ZoneType.CUSTOM else None,
                     "temp": zone.temp,
                     "hw": zone.hw,
                 } for zone in zones]),
@@ -495,6 +496,7 @@ class Zone:
     def __init__(
         self,
         id: int | None = None,
+        type: int | None = None,
         name: str = "",
         temp: float = 0.0,
         hw: bool = False,
@@ -503,22 +505,25 @@ class Zone:
         """Create new zone attribute."""
 
         self.id = id
+        self.type = type
         self.temp = temp
         self.hw = hw
 
         if name:
             self.name = name
         else:
-            if id == 0:
-                self.name = "Comfort"
-            elif id == 1:
+            if type == ZoneType.AT_HOME:
+                self.name = "At home"
+            elif type == ZoneType.NIGHT:
                 self.name = "Night"
-            elif id == 2:
+            elif type == ZoneType.AWAY_OLD:
                 self.name = "Away"
-            elif id == 3:
+            elif type == ZoneType.OFF:
                 self.name = "Off"
-            elif id == 4:
-                self.name = "Eco"
+            elif type == ZoneType.CUSTOM:
+                self.name = "Custom"
+            elif type == ZoneType.AWAY:
+                self.name = "Away"
             else:
                 self.name = ""
 
@@ -684,3 +689,14 @@ class MeasurementScale(Enum):
     DAY = "1day"
     WEEK = "1week"
     MONTH = "1month"
+
+
+class ZoneType(Enum):
+    """ZoneType enumeration representing kinds of zones that are available."""
+
+    AT_HOME = 0
+    NIGHT = 1
+    AWAY_OLD = 2
+    OFF = 3
+    CUSTOM = 4
+    AWAY = 5
