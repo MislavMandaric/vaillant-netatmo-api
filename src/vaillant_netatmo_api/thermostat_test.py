@@ -63,7 +63,10 @@ get_thermostats_data_response = {
                         "setpoint_manual": {"setpoint_activate": False, "setpoint_endtime": 1642056298},
                         "therm_program_list": [
                             {
-                                "zones": [{"temp": 20, "id": 0, "hw": True}],
+                                "zones": [
+                                    {"temp": 20, "id": 0, "type": 0, "hw": True},
+                                    {"temp": 21, "id": 1, "type": 4, "name": "Test", "hw": False}
+                                ],
                                 "timetable": [{"id": 0, "m_offset": 0}],
                                 "program_id": "program_id",
                                 "name": "name",
@@ -123,7 +126,7 @@ sync_schedule_request = {
     "module_id": "module",
     "schedule_id": "program_id",
     "name": "name",
-    "zones": "[{\"id\": 0, \"temp\": 20, \"hw\": true}]",
+    "zones": "[{\"id\": 0, \"type\": 0, \"temp\": 20, \"hw\": true}, {\"id\": 1, \"type\": 4, \"name\": \"Test\", \"temp\": 21, \"hw\": false}]",
     "timetable": "[{\"id\": 0, \"m_offset\": 0}]",
     "access_token": "12345",
 }
@@ -305,7 +308,7 @@ class TestThermostat:
                     SetpointMode.MANUAL,
                     True,
                 )
-    
+
     async def test_async_set_minor_mode__activate_manual_without_temp__raises_error(self):
         async with thermostat_client("", "", token, None) as client:
             with pytest.raises(UnsuportedArgumentsException):
@@ -316,7 +319,7 @@ class TestThermostat:
                     True,
                     setpoint_endtime=datetime.now(),
                 )
-    
+
     async def test_async_set_minor_mode__activate_manual_without_endtime__raises_error(self):
         async with thermostat_client("", "", token, None) as client:
             with pytest.raises(UnsuportedArgumentsException):
@@ -348,7 +351,7 @@ class TestThermostat:
         set_minor_mode_response = {
             "status": "ok",
         }
-        
+
         respx_mock.post("https://api.netatmo.com/api/setminormode", data=set_minor_mode_request).respond(200, json=set_minor_mode_response)
 
         async with thermostat_client("", "", token, None) as client:
@@ -383,7 +386,7 @@ class TestThermostat:
                     False,
                     setpoint_temp=25,
                 )
-    
+
     async def test_async_set_minor_mode__deactivate_manual_with_endtime__raises_error(self):
         async with thermostat_client("", "", token, None) as client:
             with pytest.raises(UnsuportedArgumentsException):
@@ -407,7 +410,7 @@ class TestThermostat:
         set_minor_mode_response = {
             "status": "ok",
         }
-        
+
         respx_mock.post("https://api.netatmo.com/api/setminormode", data=set_minor_mode_request).respond(200, json=set_minor_mode_response)
 
         async with thermostat_client("", "", token, None) as client:
@@ -430,7 +433,7 @@ class TestThermostat:
         set_minor_mode_response = {
             "status": "ok",
         }
-        
+
         respx_mock.post("https://api.netatmo.com/api/setminormode", data=set_minor_mode_request).respond(200, json=set_minor_mode_response)
 
         async with thermostat_client("", "", token, None) as client:
@@ -447,7 +450,7 @@ class TestThermostat:
         mocker.patch("vaillant_netatmo_api.thermostat.now", return_value=some_time)
 
         endtime = some_time + timedelta(seconds=10)
-        
+
         set_minor_mode_request = {
             "device_id": "device",
             "module_id": "module",
@@ -460,7 +463,7 @@ class TestThermostat:
         set_minor_mode_response = {
             "status": "ok",
         }
-        
+
         respx_mock.post("https://api.netatmo.com/api/setminormode", data=set_minor_mode_request).respond(200, json=set_minor_mode_response)
 
         async with thermostat_client("", "", token, None) as client:
@@ -471,7 +474,7 @@ class TestThermostat:
                 True,
                 setpoint_endtime=endtime,
             )
-    
+
     async def test_async_set_minor_mode__activate_away_without_endtime__raises_error(self):
         async with thermostat_client("", "", token, None) as client:
             with pytest.raises(UnsuportedArgumentsException):
@@ -482,7 +485,7 @@ class TestThermostat:
                     True,
                     setpoint_temp=25,
                 )
-    
+
     async def test_async_set_minor_mode__activate_away_with_temp_and_endtime__raises_error(self):
         async with thermostat_client("", "", token, None) as client:
             with pytest.raises(UnsuportedArgumentsException):
@@ -517,7 +520,7 @@ class TestThermostat:
                     False,
                     setpoint_temp=25,
                 )
-    
+
     async def test_async_set_minor_mode__deactivate_away_with_endtime__raises_error(self):
         async with thermostat_client("", "", token, None) as client:
             with pytest.raises(UnsuportedArgumentsException):
@@ -541,7 +544,7 @@ class TestThermostat:
         set_minor_mode_response = {
             "status": "ok",
         }
-        
+
         respx_mock.post("https://api.netatmo.com/api/setminormode", data=set_minor_mode_request).respond(200, json=set_minor_mode_response)
 
         async with thermostat_client("", "", token, None) as client:
@@ -581,7 +584,7 @@ class TestThermostat:
         set_minor_mode_response = {
             "status": "ok",
         }
-        
+
         respx_mock.post("https://api.netatmo.com/api/setminormode", data=set_minor_mode_request).respond(200, json=set_minor_mode_response)
 
         async with thermostat_client("", "", token, None) as client:
@@ -592,7 +595,7 @@ class TestThermostat:
                 True,
                 setpoint_endtime=endtime,
             )
-    
+
     async def test_async_set_minor_mode__activate_hwb_without_endtime__raises_error(self):
         async with thermostat_client("", "", token, None) as client:
             with pytest.raises(UnsuportedArgumentsException):
@@ -603,7 +606,7 @@ class TestThermostat:
                     True,
                     setpoint_temp=25,
                 )
-    
+
     async def test_async_set_minor_mode__activate_hwb_with_temp_and_endtime__raises_error(self):
         async with thermostat_client("", "", token, None) as client:
             with pytest.raises(UnsuportedArgumentsException):
@@ -638,7 +641,7 @@ class TestThermostat:
                     False,
                     setpoint_temp=25,
                 )
-    
+
     async def test_async_set_minor_mode__deactivate_hwb_with_endtime__raises_error(self):
         async with thermostat_client("", "", token, None) as client:
             with pytest.raises(UnsuportedArgumentsException):
@@ -662,7 +665,7 @@ class TestThermostat:
         set_minor_mode_response = {
             "status": "ok",
         }
-        
+
         respx_mock.post("https://api.netatmo.com/api/setminormode", data=set_minor_mode_request).respond(200, json=set_minor_mode_response)
 
         async with thermostat_client("", "", token, None) as client:
@@ -683,7 +686,10 @@ class TestThermostat:
                     sync_schedule_request["module_id"],
                     sync_schedule_request["schedule_id"],
                     sync_schedule_request["name"],
-                    [Zone(**{"temp": 20, "id": 0, "hw": True})],
+                [
+                    Zone(**{"temp": 20, "id": 0, "type": 0, "hw": True}),
+                    Zone(**{"temp": 21, "id": 1, "type": 4, "name": "Test", "hw": False}),
+                ],
                     [TimeSlot(**{"id": 0, "m_offset": 0})],
                 )
 
@@ -699,7 +705,10 @@ class TestThermostat:
                 sync_schedule_request["module_id"],
                 sync_schedule_request["schedule_id"],
                 sync_schedule_request["name"],
-                [Zone(**{"temp": 20, "id": 0, "hw": True})],
+                [
+                    Zone(**{"temp": 20, "id": 0, "type": 0, "hw": True}),
+                    Zone(**{"temp": 21, "id": 1, "type": 4, "name": "Test", "hw": False}),
+                ],
                 [TimeSlot(**{"id": 0, "m_offset": 0})],
             )
 
@@ -714,7 +723,10 @@ class TestThermostat:
                 sync_schedule_request["module_id"],
                 sync_schedule_request["schedule_id"],
                 sync_schedule_request["name"],
-                [Zone(**{"temp": 20, "id": 0, "hw": True})],
+                [
+                    Zone(**{"temp": 20, "id": 0, "type": 0, "hw": True}),
+                    Zone(**{"temp": 21, "id": 1, "type": 4, "name": "Test", "hw": False}),
+                ],
                 [TimeSlot(**{"id": 0, "m_offset": 0})],
             )
 
