@@ -24,6 +24,7 @@ _SET_MINOR_MODE_PATH = "api/setminormode"
 _SYNC_SCHEDULE_PATH = "api/syncschedule"
 _SWITCH_SCHEDULE_PATH = "api/switchschedule"
 _SET_HOT_WATER_TEMPERATURE_PATH = "api/sethotwatertemperature"
+_MODIFY_DEVICE_PARAM_PATH = "api/modifydeviceparam"
 _VAILLANT_DEVICE_TYPE = "NAVaillant"
 _VAILLANT_DATA_AMOUNT = "app"
 _VAILLANT_SYNC_DEVICE_ID = "all"
@@ -89,7 +90,9 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
 
         return [Device(**device) for device in body["body"]["devices"]]
 
@@ -129,7 +132,9 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
 
         return [
             MeasurementItem(**measurement)
@@ -158,7 +163,9 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
 
     async def async_set_minor_mode(
         self,
@@ -183,7 +190,9 @@ class ThermostatClient(BaseClient):
             "activate": activate,
         }
 
-        endtime = self._get_setpoint_endtime(setpoint_mode, activate, setpoint_endtime)
+        endtime = self._get_setpoint_endtime(
+            setpoint_mode, activate, setpoint_endtime
+        )
         if endtime is not None:
             data["setpoint_endtime"] = endtime
 
@@ -197,7 +206,9 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
 
     async def async_sync_schedule(
         self,
@@ -222,15 +233,15 @@ class ThermostatClient(BaseClient):
             "schedule_id": schedule_id,
             "name": name,
             "zones": json.dumps([{
-                    "id": zone.id,
-                    # TODO: Should this call include name?
-                    "temp": zone.temp,
-                    "hw": zone.hw,
-                } for zone in zones]),
+                "id": zone.id,
+                # TODO: Should this call include name?
+                "temp": zone.temp,
+                "hw": zone.hw,
+            } for zone in zones]),
             "timetable": json.dumps([{
-                    "id": time_slot.id,
-                    "m_offset": time_slot.m_offset,
-                } for time_slot in timetable]),
+                "id": time_slot.id,
+                "m_offset": time_slot.m_offset,
+            } for time_slot in timetable]),
         }
 
         body = await self._post(
@@ -239,7 +250,9 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
 
     async def async_switch_schedule(
         self,
@@ -266,7 +279,36 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
+
+    async def async_modify_device_params(
+        self,
+        device_id: str,
+        setpoint_default_duration: int,
+    ) -> None:
+        """
+        Modify the thermostat's default setpoint duration.
+
+        On success, returns nothing. On error, throws an exception.
+        """
+
+        path = _MODIFY_DEVICE_PARAM_PATH
+        data = {
+            "device_id": device_id,
+            "setpoint_default_duration": setpoint_default_duration,
+        }
+
+        body = await self._post(
+            path,
+            data=data,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
 
     async def async_set_hot_water_temperature(
         self,
@@ -292,7 +334,9 @@ class ThermostatClient(BaseClient):
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException("Unknown response error. Check the log for more details.", path=path, data=data, body=body)
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
 
     def _get_setpoint_endtime(
         self,
@@ -302,16 +346,22 @@ class ThermostatClient(BaseClient):
     ) -> int | None:
         if not activate:
             if setpoint_endtime is not None:
-                raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
+                raise UnsuportedArgumentsException(
+                    "Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime
+                )
             return None
         else:
             if setpoint_endtime is None:
                 if setpoint_mode == SetpointMode.MANUAL or setpoint_mode == SetpointMode.HWB:
-                    raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
+                    raise UnsuportedArgumentsException(
+                        "Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime
+                    )
                 return None
             else:
                 if setpoint_endtime <= now():
-                    raise UnsuportedArgumentsException("Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime)
+                    raise UnsuportedArgumentsException(
+                        "Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime
+                    )
                 return round(setpoint_endtime.timestamp())
 
     def _get_setpoint_temp(
@@ -322,16 +372,22 @@ class ThermostatClient(BaseClient):
     ) -> float | None:
         if not activate:
             if setpoint_temp is not None:
-                raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
+                raise UnsuportedArgumentsException(
+                    "Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp
+                )
             return None
         else:
             if setpoint_temp is None:
                 if setpoint_mode == SetpointMode.MANUAL:
-                    raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
+                    raise UnsuportedArgumentsException(
+                        "Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp
+                    )
                 return None
             else:
                 if setpoint_mode != SetpointMode.MANUAL:
-                    raise UnsuportedArgumentsException("Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp)
+                    raise UnsuportedArgumentsException(
+                        "Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp
+                    )
                 return setpoint_temp
 
 
@@ -628,7 +684,9 @@ class MeasurementItem:
 
         self.beg_time = beg_time
         self.step_time = step_time
-        self.value = [value_item for inner_list in value for value_item in inner_list]
+        self.value = [
+            value_item for inner_list in value for value_item in inner_list
+        ]
 
     def __eq__(self, other: MeasurementItem):
         if not isinstance(other, MeasurementItem):
