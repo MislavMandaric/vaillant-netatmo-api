@@ -1,9 +1,18 @@
 # CHANGELOG
 
 
+## v0.12.1 (2025-01-04)
+
+### Bug Fixes
+
+* fix: Release trigger ([`ac67df6`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/ac67df68182ca4b04082bb9a38fe86f5522be7bc))
+
+
 ## v0.12.0 (2025-01-04)
 
 ### Chores
+
+* chore(release): 0.12.0 [skip ci] ([`60a3c0c`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/60a3c0c231df60fcc8f857f0c404a71564680840))
 
 * chore: Remove dynamic field ([`81f3293`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/81f3293cdc1143b980a924360b6d427988613a2c))
 
