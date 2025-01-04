@@ -40,13 +40,29 @@ jobs:
     concurrency: release
     environment:
       name: release
+    permissions:
+      id-token: write
+      contents: write
 
     steps:
-    - uses: actions/checkout@v3.1.0
+    - name: Setup | Checkout Repository at workflow sha
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - name: Python Semantic Release
-      uses: relekang/python-semantic-release@v7.33.2
+
+    - name: Action | Semantic Version Release
+      id: release
+      uses: python-semantic-release/python-semantic-release@v9.12.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        pypi_token: ${{ secrets.PYPI_TOKEN }}
+
+    - name: Publish | Upload package to PyPI
+      uses: pypa/gh-action-pypi-publish@v1
+      if: steps.release.outputs.released == 'true'
+
+    - name: Publish | Upload to GitHub Release Assets
+      uses: python-semantic-release/publish-action@v9.8.9
+      if: steps.release.outputs.released == 'true'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ steps.release.outputs.tag }}
