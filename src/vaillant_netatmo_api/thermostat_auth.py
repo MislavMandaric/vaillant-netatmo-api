@@ -88,7 +88,7 @@ class ThermostatAuth(Auth):
         if self._token_store.token is not None:
             key = "authorization"
             value = f"Bearer {self._token_store.token.access_token}"
-            headers.update(key, value)
+            headers.update( { key: value })
         return headers
 
     def _headers_without_content_length(self, headers: Headers) -> Headers:

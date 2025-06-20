@@ -25,6 +25,7 @@ _SYNC_SCHEDULE_PATH = "api/syncschedule"
 _SWITCH_SCHEDULE_PATH = "api/switchschedule"
 _SET_HOT_WATER_TEMPERATURE_PATH = "api/sethotwatertemperature"
 _MODIFY_DEVICE_PARAM_PATH = "api/modifydeviceparam"
+_SET_STATE_PATH = "syncapi/v1/setstate"
 _VAILLANT_DEVICE_TYPE = "NAVaillant"
 _VAILLANT_DATA_AMOUNT = "app"
 _VAILLANT_SYNC_DEVICE_ID = "all"
@@ -208,6 +209,98 @@ class ThermostatClient(BaseClient):
         if body["status"] != _RESPONSE_STATUS_OK:
             raise NonOkResponseException(
                 "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
+        
+    async def async_set_state_room(
+        self,
+        home_id: str,
+        room_id: str,
+        setpoint_mode: SetpointMode,
+        activate: bool,
+        setpoint_endtime: datetime | None = None,
+        setpoint_temp: float | None = None,
+    ) -> None:
+        """
+        calling set_state
+        Activate or deactivate thermostat's minor mode, for the provided duration and temperature.
+        
+        On success, returns nothing. On error, throws an exception.
+        """
+        
+        path_json = _SET_STATE_PATH
+        data_json = {
+            "home": {
+                "id": home_id,
+                "rooms": [
+                {
+                   "id": room_id,
+                   "therm_setpoint_mode": "manual",
+                   "therm_setpoint_temperature": setpoint_temp,
+                }
+                ]
+            }
+        }
+        
+        endtime = self._get_setpoint_endtime(
+            setpoint_mode, activate, setpoint_endtime
+        )
+        if endtime is not None:
+            data_json["home"]["rooms"][0]["therm_setpoint_end_time"] = endtime
+        
+        body = await self._post(
+            path_json,
+            json=data_json,
+        )
+        
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path_json, body=body, json=data_json
+            )
+    
+    async def async_set_state_module(
+        self,
+        home_id: str,
+        module_id: str,
+        setpoint_mode: SetpointMode,
+        activate: bool,
+        setpoint_endtime: datetime | None = None,
+        setpoint_temp: float | None = None,
+    ) -> None:
+        """
+        calling set_state
+        Activate or deactivate module, used in first instance to control hwb
+        
+        On success, returns nothing. On error, throws an exception.
+        """
+        
+        path_json = _SET_STATE_PATH
+        data_json = {
+            "home": {
+                "id": home_id,
+                "modules": [
+                {
+                   "id": module_id,
+                   "dhw_enabled": activate
+                }
+                ]
+            }
+        }
+        
+        endtime = self._get_setpoint_endtime(
+            setpoint_mode, activate, setpoint_endtime
+        )
+        # to be confirmed that therm_setpoint_end_time is the correct one
+        if endtime is not None:
+            data_json["home"]["modules"][0]["therm_setpoint_end_time"] = endtime
+
+        body = await self._post(
+            path_json,
+            json=data_json,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path_json, body=body, json=data_json
             )
 
     async def async_sync_schedule(
