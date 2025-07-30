@@ -40,7 +40,7 @@ class BaseClient:
     async def _post(self, path: str, data: dict = None, json: dict = None) -> dict:
         """
         Makes post request using the underlying httpx AsyncClient, with the defaut timeout of 15s.
-        
+
         In case of retryable exceptions, requests are retryed for up to 10 times or 5 minutes.
         """
 
