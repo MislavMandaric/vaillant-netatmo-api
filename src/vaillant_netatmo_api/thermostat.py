@@ -11,12 +11,14 @@ from typing import AsyncGenerator, Callable
 
 from httpx import AsyncClient
 
+from .home import Home, Room
 from .base import BaseClient
 from .errors import NonOkResponseException, UnsuportedArgumentsException
 from .thermostat_auth import ThermostatAuth
 from .time import now
 from .token import Token, TokenStore
 
+_HOMES_DATA_PATH = "api/homesdata"
 _GET_THERMOSTATS_DATA_PATH = "api/getthermostatsdata"
 _GET_MEASURE_PATH = "api/getmeasure"
 _SET_SYSTEM_MODE_PATH = "api/setsystemmode"
@@ -69,6 +71,31 @@ class ThermostatClient(BaseClient):
         """
 
         super().__init__(client, ThermostatAuth(token_store))
+
+    async def async_get_homes_data(self) -> list[Home]:
+        """
+        Get homes data from the Netatmo API.
+
+        On success, returns a list of homes with their device data. On error, throws an exception.
+        """
+        path = _HOMES_DATA_PATH
+        data = {
+            "device_type": _VAILLANT_DEVICE_TYPE,
+            "data_amount": _VAILLANT_DATA_AMOUNT,
+            "sync_device_id": _VAILLANT_SYNC_DEVICE_ID,
+        }
+
+        body = await self._post(
+            path,
+            json=data,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
+
+        return [Home(**home) for home in body["body"]["homes"]]
 
     async def async_get_thermostats_data(self) -> list[Device]:
         """

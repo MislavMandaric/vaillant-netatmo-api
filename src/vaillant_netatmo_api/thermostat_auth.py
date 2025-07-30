@@ -13,7 +13,7 @@ _TOKEN_PATH = "/oauth2/token"
 class ThermostatAuth(Auth):
     """
     Thermostat client's Auth implementation of the httpx auth middleware.
-    
+
     For each request appends access token to the request body and handles refreshing access token after it expires.
     """
 
@@ -73,11 +73,11 @@ class ThermostatAuth(Auth):
             url,
             data=data,
         )
-    
+
     def _process_refresh_response(self, response: Response) -> None:
         if not response.is_error:
             self._token_store.token = Token(response.json())
-    
+
     def _is_content_type_json(self, request: Request) -> bool:
         if request.headers.get("content-type") == "application/json":
             return True
@@ -88,7 +88,7 @@ class ThermostatAuth(Auth):
         if self._token_store.token is not None:
             key = "authorization"
             value = f"Bearer {self._token_store.token.access_token}"
-            headers.update(key, value)
+            headers.update([(key, value)])
         return headers
 
     def _headers_without_content_length(self, headers: Headers) -> Headers:
@@ -101,6 +101,7 @@ class ThermostatAuth(Auth):
         if self._token_store.token is not None:
             key = "access_token"
             value = self._token_store.token.access_token
-            access_token_content = urlencode([(key, value)], doseq=True).encode("utf-8")
+            access_token_content = urlencode(
+                [(key, value)], doseq=True).encode("utf-8")
 
         return b'&'.join([content, access_token_content])
