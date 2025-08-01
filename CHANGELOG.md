@@ -1,11 +1,24 @@
 # CHANGELOG
 
 
+## v0.13.0 (2025-08-01)
+
+### Features
+
+* feat: New APIs for modifying state (#147) ([`9bddf9d`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/9bddf9d9d4617f48471d7c94cad8115e0a22c728))
+
+* feat: API for getting home data (#146) ([`93857e0`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/93857e01ea56e75166dddbadda2490587293d689))
+
+
 ## v0.12.1 (2025-01-04)
 
 ### Bug Fixes
 
 * fix: Release trigger ([`ac67df6`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/ac67df68182ca4b04082bb9a38fe86f5522be7bc))
+
+### Chores
+
+* chore(release): 0.12.1 [skip ci] ([`5fbca9f`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/5fbca9f382451a3f92c49096c89c1aa97465ee34))
 
 
 ## v0.12.0 (2025-01-04)
