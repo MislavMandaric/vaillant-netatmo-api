@@ -15,6 +15,13 @@ from .errors import (
     RetryableException,
     UnsuportedArgumentsException,
 )
+from .home import (
+    Home,
+    Room,
+    TemperatureControlMode,
+    ThermMode,
+    ThermSetpointMode,
+)
 from .thermostat import (
     Device,
     Measured,
@@ -48,6 +55,11 @@ __all__ = [
     "RequestUnauthorizedException",
     "RetryableException",
     "UnsuportedArgumentsException",
+    "Home",
+    "Room",
+    "TemperatureControlMode",
+    "ThermMode",
+    "ThermSetpointMode",
     "Device",
     "Module",
     "Program",
