@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from enum import Enum
+
 
 class Home:
     """Home model representing a home in Vaillant system."""
@@ -47,3 +49,25 @@ class Room:
         return (
             self.id == other.id
         )
+
+
+class TemperatureControlMode(Enum):
+    """TemperatureControlMode enumeration representing possible system modes of the thermostat."""
+
+    HEATING = "heating"
+    COOLING = "cooling"
+
+
+class ThermMode(Enum):
+    """ThermMode enumeration representing possible system modes of the thermostat."""
+
+    HG = "hg"
+    SCHEDULE = "schedule"
+    AWAY = "away"
+
+
+class ThermSetpointMode(Enum):
+    """ThermSetpointMode enumeration representing possible system modes of the thermostat."""
+
+    MANUAL = "manual"
+    HOME = "home"
