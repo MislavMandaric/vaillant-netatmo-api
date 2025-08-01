@@ -31,16 +31,16 @@ class TokenStore:
 
         if self._on_token_update is not None:
             self._on_token_update(self._token)
-    
+
     @property
     def access_token_request(self) -> dict:
         return {
             "grant_type": "password",
             "client_id": self._client_id,
             "client_secret": self._client_secret,
-            "scope": "read_thermostat write_thermostat",
+            "scope": "all_scopes",
         }
-    
+
     @property
     def refresh_token_request(self) -> dict:
         return {
@@ -69,15 +69,15 @@ class Token:
     def __eq__(self, other: Token):
         if (not isinstance(other, Token)):
             return False
-        
+
         return self._access_token == other._access_token and \
             self._refresh_token == other._refresh_token and \
             self._expires_at == other._expires_at
-    
+
     @property
     def access_token(self) -> str:
         return self._access_token
-    
+
     @property
     def refresh_token(self) -> str:
         return self._refresh_token

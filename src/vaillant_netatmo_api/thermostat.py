@@ -30,6 +30,7 @@ _MODIFY_DEVICE_PARAM_PATH = "api/modifydeviceparam"
 _VAILLANT_DEVICE_TYPE = "NAVaillant"
 _VAILLANT_DATA_AMOUNT = "app"
 _VAILLANT_SYNC_DEVICE_ID = "all"
+_VAILLANT_APP_ID = "app_thermostat_vaillant"
 _RESPONSE_STATUS_OK = "ok"
 _SETPOINT_DEFAULT_DURATION_MINS = 120
 
@@ -80,9 +81,9 @@ class ThermostatClient(BaseClient):
         """
         path = _HOMES_DATA_PATH
         data = {
-            "device_type": _VAILLANT_DEVICE_TYPE,
-            "data_amount": _VAILLANT_DATA_AMOUNT,
-            "sync_device_id": _VAILLANT_SYNC_DEVICE_ID,
+            "app_type": _VAILLANT_APP_ID,
+            "app_identifier": _VAILLANT_APP_ID,
+            "sync_measurements": True,
         }
 
         body = await self._post(
@@ -111,7 +112,7 @@ class ThermostatClient(BaseClient):
             "sync_device_id": _VAILLANT_SYNC_DEVICE_ID,
         }
 
-        body = await self._post(
+        body = await self._old_post(
             path,
             data=data,
         )
@@ -153,7 +154,7 @@ class ThermostatClient(BaseClient):
         if limit is not None:
             data["limit"] = limit
 
-        body = await self._post(
+        body = await self._old_post(
             path,
             data=data,
         )
@@ -167,75 +168,6 @@ class ThermostatClient(BaseClient):
             MeasurementItem(**measurement)
             for measurement in body["body"]
         ]
-
-    async def async_set_system_mode(
-        self, device_id: str, module_id: str, system_mode: SystemMode
-    ) -> None:
-        """
-        Change the thermostat's system mode to the provided value.
-
-        On success, returns nothing. On error, throws an exception.
-        """
-
-        path = _SET_SYSTEM_MODE_PATH
-        data = {
-            "device_id": device_id,
-            "module_id": module_id,
-            "system_mode": system_mode.value,
-        }
-
-        body = await self._post(
-            path,
-            data=data,
-        )
-
-        if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException(
-                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
-            )
-
-    async def async_set_minor_mode(
-        self,
-        device_id: str,
-        module_id: str,
-        setpoint_mode: SetpointMode,
-        activate: bool,
-        setpoint_endtime: datetime | None = None,
-        setpoint_temp: float | None = None,
-    ) -> None:
-        """
-        Activate or deactivate thermostat's minor mode, for the provided duration and temperature.
-
-        On success, returns nothing. On error, throws an exception.
-        """
-
-        path = _SET_MINOR_MODE_PATH
-        data = {
-            "device_id": device_id,
-            "module_id": module_id,
-            "setpoint_mode": setpoint_mode.value,
-            "activate": activate,
-        }
-
-        endtime = self._get_setpoint_endtime(
-            setpoint_mode, activate, setpoint_endtime
-        )
-        if endtime is not None:
-            data["setpoint_endtime"] = endtime
-
-        temp = self._get_setpoint_temp(setpoint_mode, activate, setpoint_temp)
-        if temp is not None:
-            data["setpoint_temp"] = temp
-
-        body = await self._post(
-            path,
-            data=data,
-        )
-
-        if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException(
-                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
-            )
 
     async def async_sync_schedule(
         self,
@@ -271,7 +203,7 @@ class ThermostatClient(BaseClient):
             } for time_slot in timetable]),
         }
 
-        body = await self._post(
+        body = await self._old_post(
             path,
             data=data,
         )
@@ -300,7 +232,7 @@ class ThermostatClient(BaseClient):
             "schedule_id": schedule_id,
         }
 
-        body = await self._post(
+        body = await self._old_post(
             path,
             data=data,
         )
@@ -327,7 +259,7 @@ class ThermostatClient(BaseClient):
             "setpoint_default_duration": setpoint_default_duration,
         }
 
-        body = await self._post(
+        body = await self._old_post(
             path,
             data=data,
         )
@@ -355,7 +287,7 @@ class ThermostatClient(BaseClient):
             "dhw": dhw,
         }
 
-        body = await self._post(
+        body = await self._old_post(
             path,
             data=data,
         )
