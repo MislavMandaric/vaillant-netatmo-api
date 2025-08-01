@@ -1,7 +1,18 @@
 # CHANGELOG
 
 
+## v0.13.1 (2025-08-01)
+
+### Bug Fixes
+
+* fix: Export newly added models required for new APIs (#148) ([`ec458a1`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/ec458a15d30438413519a284daa3b39212277aa1))
+
+
 ## v0.13.0 (2025-08-01)
+
+### Chores
+
+* chore(release): 0.13.0 [skip ci] ([`8ddeeb0`](https://github.com/MislavMandaric/vaillant-netatmo-api/commit/8ddeeb07ec08fb4ff44ea431c19ceb2191a9133a))
 
 ### Features
 
