@@ -11,7 +11,7 @@ from typing import AsyncGenerator, Callable
 
 from httpx import AsyncClient
 
-from .home import Home, Room
+from .home import Home, Room, ThermMode, TemperatureControlMode, ThermSetpointMode
 from .base import BaseClient
 from .errors import NonOkResponseException, UnsuportedArgumentsException
 from .thermostat_auth import ThermostatAuth
@@ -19,6 +19,9 @@ from .time import now
 from .token import Token, TokenStore
 
 _HOMES_DATA_PATH = "api/homesdata"
+_SET_HOME_DATA = "api/sethomedata"
+_SET_STATE = "syncapi/v1/setstate"
+
 _GET_THERMOSTATS_DATA_PATH = "api/getthermostatsdata"
 _GET_MEASURE_PATH = "api/getmeasure"
 _SET_SYSTEM_MODE_PATH = "api/setsystemmode"
@@ -97,6 +100,121 @@ class ThermostatClient(BaseClient):
             )
 
         return [Home(**home) for home in body["body"]["homes"]]
+
+    async def async_set_home_data(
+        self,
+        home_id: str,
+        temperature_control_mode: TemperatureControlMode,
+        therm_mode: ThermMode | None = None,
+    ) -> None:
+        """
+        Change the thermostat's system mode to the provided value.
+
+        On success, returns nothing. On error, throws an exception.
+        """
+
+        path = _SET_HOME_DATA
+        data = {
+            "home": {
+                "id": home_id,
+                "temperature_control_mode": temperature_control_mode.value,
+            },
+            "app_identifier": _VAILLANT_APP_ID,
+        }
+
+        if therm_mode is not None:
+            data["therm_mode"] = therm_mode.value
+
+        body = await self._post(
+            path,
+            json=data,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
+
+    async def async_set_state_for_room(
+        self,
+        home_id: str,
+        room_id: str,
+        therm_setpoint_mode: ThermSetpointMode,
+        therm_setpoint_temperature: float | None = None,
+        therm_setpoint_end_time: datetime | None = None,
+    ) -> None:
+        """
+        Activate or deactivate thermostat's minor mode, for the provided duration and temperature.
+
+        On success, returns nothing. On error, throws an exception.
+        """
+
+        path = _SET_STATE
+        data = {
+            "home": {
+                "id": home_id,
+                "rooms": [{
+                    "id": room_id,
+                    "therm_setpoint_mode": therm_setpoint_mode.value,
+                }],
+            },
+            "app_identifier": _VAILLANT_APP_ID,
+        }
+
+        endtime = self._get_setpoint_endtime(
+            therm_setpoint_mode, therm_setpoint_end_time
+        )
+        if endtime is not None:
+            data["home"]["rooms"][0]["therm_setpoint_end_time"] = endtime
+
+        temp = self._get_setpoint_temp(
+            therm_setpoint_mode, therm_setpoint_temperature)
+        if temp is not None:
+            data["home"]["rooms"][0]["therm_setpoint_temperature"] = temp
+
+        body = await self._post(
+            path,
+            json=data,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
+
+    async def async_set_state_for_module(
+        self,
+        home_id: str,
+        module_id: str,
+        dhw_enabled: bool,
+    ) -> None:
+        """
+        Activate or deactivate thermostat's minor mode, for the provided duration and temperature.
+
+        On success, returns nothing. On error, throws an exception.
+        """
+
+        path = _SET_STATE
+        data = {
+            "home": {
+                "id": home_id,
+                "modules": [{
+                    "id": module_id,
+                    "dhw_enabled": dhw_enabled,
+                }],
+            },
+            "app_identifier": _VAILLANT_APP_ID,
+        }
+
+        body = await self._post(
+            path,
+            json=data,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
 
     async def async_get_thermostats_data(self) -> list[Device]:
         """
@@ -299,55 +417,45 @@ class ThermostatClient(BaseClient):
 
     def _get_setpoint_endtime(
         self,
-        setpoint_mode: SetpointMode,
-        activate: bool,
+        therm_setpoint_mode: ThermSetpointMode,
         setpoint_endtime: datetime | None = None,
     ) -> int | None:
-        if not activate:
-            if setpoint_endtime is not None:
-                raise UnsuportedArgumentsException(
-                    "Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime
-                )
+        if therm_setpoint_mode == ThermSetpointMode.HOME and setpoint_endtime is not None:
+            raise UnsuportedArgumentsException(
+                "Provided arguments for setting endtime are not valid.", therm_setpoint_mode=therm_setpoint_mode, setpoint_endtime=setpoint_endtime
+            )
+
+        if therm_setpoint_mode == ThermSetpointMode.MANUAL and setpoint_endtime is None:
+            raise UnsuportedArgumentsException(
+                "Provided arguments for setting endtime are not valid.", therm_setpoint_mode=therm_setpoint_mode, setpoint_endtime=setpoint_endtime
+            )
+
+        if setpoint_endtime is None:
             return None
-        else:
-            if setpoint_endtime is None:
-                if setpoint_mode == SetpointMode.MANUAL or setpoint_mode == SetpointMode.HWB:
-                    raise UnsuportedArgumentsException(
-                        "Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime
-                    )
-                return None
-            else:
-                if setpoint_endtime <= now():
-                    raise UnsuportedArgumentsException(
-                        "Provided arguments for setting endtime are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_endtime=setpoint_endtime
-                    )
-                return round(setpoint_endtime.timestamp())
+
+        if setpoint_endtime <= now():
+            raise UnsuportedArgumentsException(
+                "Provided arguments for setting endtime are not valid.", therm_setpoint_mode=therm_setpoint_mode, setpoint_endtime=setpoint_endtime
+            )
+
+        return round(setpoint_endtime.timestamp())
 
     def _get_setpoint_temp(
         self,
-        setpoint_mode: SetpointMode,
-        activate: bool,
+        therm_setpoint_mode: ThermSetpointMode,
         setpoint_temp: float | None = None,
     ) -> float | None:
-        if not activate:
-            if setpoint_temp is not None:
-                raise UnsuportedArgumentsException(
-                    "Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp
-                )
-            return None
-        else:
-            if setpoint_temp is None:
-                if setpoint_mode == SetpointMode.MANUAL:
-                    raise UnsuportedArgumentsException(
-                        "Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp
-                    )
-                return None
-            else:
-                if setpoint_mode != SetpointMode.MANUAL:
-                    raise UnsuportedArgumentsException(
-                        "Provided arguments for setting temp are not valid.", setpoint_mode=setpoint_mode, activate=activate, setpoint_temp=setpoint_temp
-                    )
-                return setpoint_temp
+        if therm_setpoint_mode == ThermSetpointMode.HOME and setpoint_temp is not None:
+            raise UnsuportedArgumentsException(
+                "Provided arguments for setting endtime are not valid.", therm_setpoint_mode=therm_setpoint_mode, setpoint_temp=setpoint_temp
+            )
+
+        if therm_setpoint_mode == ThermSetpointMode.MANUAL and setpoint_temp is None:
+            raise UnsuportedArgumentsException(
+                "Provided arguments for setting endtime are not valid.", therm_setpoint_mode=therm_setpoint_mode, setpoint_temp=setpoint_temp
+            )
+
+        return setpoint_temp
 
 
 class Device:
