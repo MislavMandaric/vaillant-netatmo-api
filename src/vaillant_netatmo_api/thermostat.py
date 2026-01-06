@@ -123,7 +123,7 @@ class ThermostatClient(BaseClient):
         }
 
         if therm_mode is not None:
-            data["therm_mode"] = therm_mode.value
+            data["home"]["therm_mode"] = therm_mode.value
 
         body = await self._post(
             path,
