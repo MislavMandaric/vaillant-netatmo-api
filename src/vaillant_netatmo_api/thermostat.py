@@ -11,7 +11,7 @@ from typing import AsyncGenerator, Callable
 
 from httpx import AsyncClient
 
-from .home import Home, Room, ThermMode, TemperatureControlMode, ThermSetpointMode
+from .home import HomeData, HomeStatus, ThermMode, TemperatureControlMode, ThermSetpointMode, Measure, MeasurementScale, MeasurementType, HomeMeasure, ScheduleType, HomeConfig
 from .base import BaseClient
 from .errors import NonOkResponseException, UnsuportedArgumentsException
 from .thermostat_auth import ThermostatAuth
@@ -19,23 +19,17 @@ from .time import now
 from .token import Token, TokenStore
 
 _HOMES_DATA_PATH = "api/homesdata"
-_SET_HOME_DATA = "api/sethomedata"
-_SET_STATE = "syncapi/v1/setstate"
+_GET_HOME_MEASURE_PATH = "api/gethomemeasure"
+_HOME_STATUS_PATH = "syncapi/v1/homestatus"
+_GET_CONFIGS_PATH = "syncapi/v1/getconfigs"
+_SET_HOME_DATA_PATH = "api/sethomedata"
+_SWITCH_HOME_SCHEDULE_PATH = "api/switchhomeschedule"
+_SET_STATE_PATH = "syncapi/v1/setstate"
+_SET_CONFIGS_PATH = "syncapi/v1/setconfigs"
 
-_GET_THERMOSTATS_DATA_PATH = "api/getthermostatsdata"
-_GET_MEASURE_PATH = "api/getmeasure"
-_SET_SYSTEM_MODE_PATH = "api/setsystemmode"
-_SET_MINOR_MODE_PATH = "api/setminormode"
-_SYNC_SCHEDULE_PATH = "api/syncschedule"
-_SWITCH_SCHEDULE_PATH = "api/switchschedule"
-_SET_HOT_WATER_TEMPERATURE_PATH = "api/sethotwatertemperature"
-_MODIFY_DEVICE_PARAM_PATH = "api/modifydeviceparam"
-_VAILLANT_DEVICE_TYPE = "NAVaillant"
-_VAILLANT_DATA_AMOUNT = "app"
-_VAILLANT_SYNC_DEVICE_ID = "all"
 _VAILLANT_APP_ID = "app_thermostat_vaillant"
+_DEVICE_TYPE = "NAVaillant"
 _RESPONSE_STATUS_OK = "ok"
-_SETPOINT_DEFAULT_DURATION_MINS = 120
 
 
 @asynccontextmanager
@@ -76,7 +70,7 @@ class ThermostatClient(BaseClient):
 
         super().__init__(client, ThermostatAuth(token_store))
 
-    async def async_get_homes_data(self) -> list[Home]:
+    async def async_homes_data(self) -> list[HomeData]:
         """
         Get homes data from the Netatmo API.
 
@@ -84,8 +78,8 @@ class ThermostatClient(BaseClient):
         """
         path = _HOMES_DATA_PATH
         data = {
-            "app_type": _VAILLANT_APP_ID,
             "app_identifier": _VAILLANT_APP_ID,
+            "app_type": _VAILLANT_APP_ID,
             "sync_measurements": True,
         }
 
@@ -99,13 +93,117 @@ class ThermostatClient(BaseClient):
                 "Unknown response error. Check the log for more details.", path=path, data=data, body=body
             )
 
-        return [Home(**home) for home in body["body"]["homes"]]
+        return [HomeData(**home) for home in body["body"]["homes"]]
+
+    async def async_get_home_measure(
+        self,
+        home_id: str,
+        module_id: str,
+        bridge: str,
+        type: MeasurementType,
+        scale: MeasurementScale,
+        date_begin: datetime,
+        date_end: datetime | None = None,
+    ) -> HomeMeasure:
+        """
+        Get real time measurement data from the Netatmo API.
+
+        On success, returns a list of measurements for provided measurement type. On error, throws an exception.
+        """
+
+        path = _GET_HOME_MEASURE_PATH
+        data = {
+            "app_identifier": _VAILLANT_APP_ID,
+            "home": {
+                "id": home_id,
+                "modules": [{
+                    "id": module_id,
+                    "bridge": bridge,
+                    "type": [type.value]
+                }],
+            },
+            "scale": scale.value,
+            "date_begin": round(date_begin.timestamp()),
+        }
+
+        if date_end is not None:
+            data["date_end"] = round(date_end.timestamp())
+
+        body = await self._post(
+            path,
+            json=data,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
+
+        return HomeMeasure(**body["body"]["home"])
+
+    async def async_home_status(
+        self,
+        home_id: str,
+    ) -> HomeStatus:
+        """
+        Get real time measurement data from the Netatmo API.
+
+        On success, returns a list of measurements for provided measurement type. On error, throws an exception.
+        """
+
+        path = _HOME_STATUS_PATH
+        data = {
+            "app_identifier": _VAILLANT_APP_ID,
+            "home_id": home_id,
+            "device_types": [_DEVICE_TYPE]
+        }
+
+        body = await self._post(
+            path,
+            json=data,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
+
+        return HomeStatus(**body["body"]["home"])
+
+    async def async_get_configs(
+        self,
+        home_id: str,
+    ) -> HomeConfig:
+        """
+        Get real time measurement data from the Netatmo API.
+
+        On success, returns a list of measurements for provided measurement type. On error, throws an exception.
+        """
+
+        path = _GET_CONFIGS_PATH
+        data = {
+            "app_identifier": _VAILLANT_APP_ID,
+            "home_id": home_id,
+        }
+
+        body = await self._post(
+            path,
+            json=data,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
+
+        return HomeConfig(**body["body"]["home"])
 
     async def async_set_home_data(
         self,
         home_id: str,
-        temperature_control_mode: TemperatureControlMode,
+        temperature_control_mode: TemperatureControlMode | None = None,
         therm_mode: ThermMode | None = None,
+        therm_setpoint_default_duration: int | None = None,
     ) -> None:
         """
         Change the thermostat's system mode to the provided value.
@@ -113,17 +211,52 @@ class ThermostatClient(BaseClient):
         On success, returns nothing. On error, throws an exception.
         """
 
-        path = _SET_HOME_DATA
+        path = _SET_HOME_DATA_PATH
         data = {
+            "app_identifier": _VAILLANT_APP_ID,
             "home": {
                 "id": home_id,
-                "temperature_control_mode": temperature_control_mode.value,
             },
-            "app_identifier": _VAILLANT_APP_ID,
         }
 
+        if temperature_control_mode is not None:
+            data["home"]["temperature_control_mode"] = temperature_control_mode.value
+
         if therm_mode is not None:
-            data["therm_mode"] = therm_mode.value
+            data["home"]["therm_mode"] = therm_mode.value
+
+        if therm_setpoint_default_duration is not None:
+            data["home"]["therm_setpoint_default_duration"] = therm_setpoint_default_duration
+
+        body = await self._post(
+            path,
+            json=data,
+        )
+
+        if body["status"] != _RESPONSE_STATUS_OK:
+            raise NonOkResponseException(
+                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
+            )
+
+    async def async_switch_schedule(
+        self,
+        home_id: str,
+        schedule_id: str,
+        schedule_type: ScheduleType,
+    ) -> None:
+        """
+        Change the thermostat's active schedule to the provided value.
+
+        On success, returns nothing. On error, throws an exception.
+        """
+
+        path = _SWITCH_HOME_SCHEDULE_PATH
+        data = {
+            "app_identifier": _VAILLANT_APP_ID,
+            "home_id": home_id,
+            "schedule_id": schedule_id,
+            "schedule_type": schedule_type.value,
+        }
 
         body = await self._post(
             path,
@@ -149,8 +282,9 @@ class ThermostatClient(BaseClient):
         On success, returns nothing. On error, throws an exception.
         """
 
-        path = _SET_STATE
+        path = _SET_STATE_PATH
         data = {
+            "app_identifier": _VAILLANT_APP_ID,
             "home": {
                 "id": home_id,
                 "rooms": [{
@@ -158,7 +292,6 @@ class ThermostatClient(BaseClient):
                     "therm_setpoint_mode": therm_setpoint_mode.value,
                 }],
             },
-            "app_identifier": _VAILLANT_APP_ID,
         }
 
         endtime = self._get_setpoint_endtime(
@@ -186,7 +319,7 @@ class ThermostatClient(BaseClient):
         self,
         home_id: str,
         module_id: str,
-        dhw_enabled: bool,
+        dhw_enabled: bool | None = None,
     ) -> None:
         """
         Activate or deactivate thermostat's minor mode, for the provided duration and temperature.
@@ -194,17 +327,18 @@ class ThermostatClient(BaseClient):
         On success, returns nothing. On error, throws an exception.
         """
 
-        path = _SET_STATE
+        path = _SET_STATE_PATH
         data = {
+            "app_identifier": _VAILLANT_APP_ID,
             "home": {
                 "id": home_id,
                 "modules": [{
                     "id": module_id,
-                    "dhw_enabled": dhw_enabled,
                 }],
             },
-            "app_identifier": _VAILLANT_APP_ID,
         }
+        if dhw_enabled is not None:
+            data["home"]["modules"][0]["dhw_enabled"] = dhw_enabled
 
         body = await self._post(
             path,
@@ -216,198 +350,39 @@ class ThermostatClient(BaseClient):
                 "Unknown response error. Check the log for more details.", path=path, data=data, body=body
             )
 
-    async def async_get_thermostats_data(self) -> list[Device]:
-        """
-        Get thermostat data from the Netatmo API.
-
-        On success, returns a list of thermostat devices with their modules. On error, throws an exception.
-        """
-
-        path = _GET_THERMOSTATS_DATA_PATH
-        data = {
-            "device_type": _VAILLANT_DEVICE_TYPE,
-            "data_amount": _VAILLANT_DATA_AMOUNT,
-            "sync_device_id": _VAILLANT_SYNC_DEVICE_ID,
-        }
-
-        body = await self._old_post(
-            path,
-            data=data,
-        )
-
-        if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException(
-                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
-            )
-
-        return [Device(**device) for device in body["body"]["devices"]]
-
-    async def async_get_measure(
+    async def async_set_configs_for_module(
         self,
-        device_id: str,
+        home_id: str,
         module_id: str,
-        type: MeasurementType,
-        scale: MeasurementScale,
-        date_begin: datetime,
-        date_end: datetime | None = None,
-        limit: int | None = None,
-    ) -> list[MeasurementItem]:
-        """
-        Get real time measurement data from the Netatmo API.
-
-        On success, returns a list of measurements for provided measurement type. On error, throws an exception.
-        """
-
-        path = _GET_MEASURE_PATH
-        data = {
-            "device_id": device_id,
-            "module_id": module_id,
-            "type": type.value,
-            "scale": scale.value,
-            "date_begin": round(date_begin.timestamp()),
-        }
-
-        if date_end is not None:
-            data["date_end"] = round(date_end.timestamp())
-        if limit is not None:
-            data["limit"] = limit
-
-        body = await self._old_post(
-            path,
-            data=data,
-        )
-
-        if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException(
-                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
-            )
-
-        return [
-            MeasurementItem(**measurement)
-            for measurement in body["body"]
-        ]
-
-    async def async_sync_schedule(
-        self,
-        device_id: str,
-        module_id: str,
-        schedule_id: str,
-        name: str,
-        zones: list[Zone],
-        timetable: list[TimeSlot],
+        dhw_setpoint_temperature: int | None = None,
+        dhw_always_on: bool | None = None,
     ) -> None:
         """
-        Change thermostat's schedule, by providing all the data for the given schedule. The method upserts all the schedule data, it
-        does not diff the data. The suggested usage is to always read the schedule first and provide the changed schedule in full back.
+        Activate or deactivate thermostat's minor mode, for the provided duration and temperature.
 
         On success, returns nothing. On error, throws an exception.
         """
 
-        path = _SYNC_SCHEDULE_PATH
+        path = _SET_CONFIGS_PATH
         data = {
-            "device_id": device_id,
-            "module_id": module_id,
-            "schedule_id": schedule_id,
-            "name": name,
-            "zones": json.dumps([{
-                "id": zone.id,
-                # TODO: Should this call include name?
-                "temp": zone.temp,
-                "hw": zone.hw,
-            } for zone in zones]),
-            "timetable": json.dumps([{
-                "id": time_slot.id,
-                "m_offset": time_slot.m_offset,
-            } for time_slot in timetable]),
+            "app_identifier": _VAILLANT_APP_ID,
+            "home": {
+                "id": home_id,
+                "modules": [{
+                    "id": module_id,
+                }],
+            },
         }
 
-        body = await self._old_post(
+        if dhw_setpoint_temperature is not None:
+            data["home"]["modules"][0]["dhw_setpoint_temperature"] = dhw_setpoint_temperature
+
+        if dhw_always_on is not None:
+            data["home"]["modules"][0]["dhw_always_on"] = dhw_always_on
+
+        body = await self._post(
             path,
-            data=data,
-        )
-
-        if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException(
-                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
-            )
-
-    async def async_switch_schedule(
-        self,
-        device_id: str,
-        module_id: str,
-        schedule_id: str,
-    ) -> None:
-        """
-        Change the thermostat's active schedule to the provided value.
-
-        On success, returns nothing. On error, throws an exception.
-        """
-
-        path = _SWITCH_SCHEDULE_PATH
-        data = {
-            "device_id": device_id,
-            "module_id": module_id,
-            "schedule_id": schedule_id,
-        }
-
-        body = await self._old_post(
-            path,
-            data=data,
-        )
-
-        if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException(
-                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
-            )
-
-    async def async_modify_device_params(
-        self,
-        device_id: str,
-        setpoint_default_duration: int,
-    ) -> None:
-        """
-        Modify the thermostat's default setpoint duration.
-
-        On success, returns nothing. On error, throws an exception.
-        """
-
-        path = _MODIFY_DEVICE_PARAM_PATH
-        data = {
-            "device_id": device_id,
-            "setpoint_default_duration": setpoint_default_duration,
-        }
-
-        body = await self._old_post(
-            path,
-            data=data,
-        )
-
-        if body["status"] != _RESPONSE_STATUS_OK:
-            raise NonOkResponseException(
-                "Unknown response error. Check the log for more details.", path=path, data=data, body=body
-            )
-
-    async def async_set_hot_water_temperature(
-        self,
-        device_id: str,
-        dhw: int,
-    ) -> None:
-        """
-        Update boilers's domestic hot water temperature to the provided value. Value should be in valid range which can be retrieved
-        by calling /api/getthermostatsdata.
-
-        On success, returns nothing. On error, throws an exception.
-        """
-
-        path = _SET_HOT_WATER_TEMPERATURE_PATH
-        data = {
-            "device_id": device_id,
-            "dhw": dhw,
-        }
-
-        body = await self._old_post(
-            path,
-            data=data,
+            json=data,
         )
 
         if body["status"] != _RESPONSE_STATUS_OK:
@@ -456,356 +431,3 @@ class ThermostatClient(BaseClient):
             )
 
         return setpoint_temp
-
-
-class Device:
-    """Device model representing a Vaillant boiler. Contains multiple modules."""
-
-    def __init__(
-        self,
-        _id: str | None = None,
-        type: str = "",
-        station_name: str = "",
-        firmware: int = 0,
-        wifi_status: int = 0,
-        dhw: float | None = None,
-        dhw_max: float | None = None,
-        dhw_min: float | None = None,
-        setpoint_default_duration: int = _SETPOINT_DEFAULT_DURATION_MINS,
-        outdoor_temperature: dict = {},
-        system_mode: str | None = None,
-        setpoint_hwb: dict = {},
-        modules: list[dict] = [],
-        **kwargs,
-    ) -> None:
-        """Create new device model."""
-
-        self.id = _id
-        self.type = type
-        self.station_name = station_name
-        self.firmware = firmware
-        self.wifi_status = wifi_status
-        self.dhw = dhw
-        self.dhw_max = dhw_max
-        self.dhw_min = dhw_min
-        self.setpoint_default_duration = setpoint_default_duration
-        self.outdoor_temperature = OutdoorTemperature(**outdoor_temperature)
-        self.system_mode = SystemMode(system_mode)
-        self.setpoint_hwb = Setpoint(**setpoint_hwb)
-        self.modules = [Module(**module) for module in modules]
-
-    def __eq__(self, other: Device):
-        if not isinstance(other, Device):
-            return False
-
-        return (
-            self.id == other.id
-            and self.type == other.type
-            and self.station_name == other.station_name
-            and self.firmware == other.firmware
-            and len(self.modules) == len(other.modules)
-            and all([False for i, j in zip(self.modules, other.modules) if i != j])
-        )
-
-
-class Module:
-    """Module model representing a Vaillant thermostat."""
-
-    def __init__(
-        self,
-        _id: str | None = None,
-        type: str = "",
-        module_name: str = "",
-        firmware: int = 0,
-        rf_status: int = 0,
-        battery_percent: int = 0,
-        setpoint_away: dict = {},
-        setpoint_manual: dict = {},
-        therm_program_list: list[dict] = [],
-        measured: dict = {},
-        boiler_status: bool = False,
-        **kwargs,
-    ) -> None:
-        """Create new module model."""
-
-        self.id = _id
-        self.type = type
-        self.module_name = module_name
-        self.firmware = firmware
-        self.rf_status = rf_status
-        self.battery_percent = battery_percent
-        self.setpoint_away = Setpoint(**setpoint_away)
-        self.setpoint_manual = Setpoint(**setpoint_manual)
-        self.therm_program_list = [
-            Program(**program) for program in therm_program_list]
-        self.measured = Measured(**measured)
-        self.boiler_status = boiler_status
-
-    def __eq__(self, other: Module):
-        if not isinstance(other, Module):
-            return False
-
-        return (
-            self.id == other.id
-            and self.type == other.type
-            and self.module_name == other.module_name
-            and self.firmware == other.firmware
-        )
-
-
-class Program:
-    """Program attribute representing a schedule for a thermostat."""
-
-    def __init__(
-        self,
-        program_id: str | None = None,
-        zones: list[dict] = [],
-        timetable: list[dict] = [],
-        name: str = "",
-        selected: bool = False,
-        **kwargs,
-    ) -> None:
-        """Create new program model."""
-
-        self.id = program_id
-        self.zones = [Zone(**zone) for zone in zones]
-        self.timetable = [TimeSlot(**time_slot) for time_slot in timetable]
-        self.name = name
-        self.selected = selected
-
-    def get_active_zone(self) -> Zone | None:
-        """Returns a currently active zone for a program."""
-
-        zone_id = 0
-        for time_slot in self.timetable:
-            if not time_slot.is_already_started:
-                break
-            zone_id = time_slot.id
-
-        for zone in self.zones:
-            if zone.id == zone_id:
-                return zone
-
-        return None
-
-    def get_timeslots_for_today(self) -> list[TimeSlot]:
-        """
-        Returns a list of time slots which are defined for today.
-        """
-
-        n = now()
-
-        time_slots = []
-        previous_time_slot_zone_id = 0
-        for time_slot in self.timetable:
-            if time_slot.day == n.weekday():
-                if len(time_slots) == 0 and time_slot.time != time(0, 0):
-                    time_slots.append(
-                        TimeSlot(
-                            previous_time_slot_zone_id,
-                            time_slot.day * 1440,
-                        )
-                    )
-                time_slots.append(time_slot)
-            previous_time_slot_zone_id = time_slot.id
-
-        return time_slots
-
-
-class Zone:
-    """Zone attribute representing a zone profile which defines how thermostat behaves in a given time slot."""
-
-    def __init__(
-        self,
-        id: int | None = None,
-        name: str = "",
-        temp: float = 0.0,
-        hw: bool = False,
-        **kwargs,
-    ) -> None:
-        """Create new zone attribute."""
-
-        self.id = id
-        self.temp = temp
-        self.hw = hw
-
-        if name:
-            self.name = name
-        else:
-            if id == 0:
-                self.name = "Comfort"
-            elif id == 1:
-                self.name = "Night"
-            elif id == 2:
-                self.name = "Away"
-            elif id == 3:
-                self.name = "Off"
-            elif id == 4:
-                self.name = "Eco"
-            else:
-                self.name = ""
-
-
-class TimeSlot:
-    """TimeSlot attribute representing one slot of a timetable schedule."""
-
-    def __init__(
-        self,
-        id: int | None = None,
-        m_offset: int = 0,
-        **kwargs,
-    ) -> None:
-        """Create new time slot attribute."""
-
-        self.id = id
-        self.m_offset = m_offset
-
-    @property
-    def time(self) -> time:
-        """Returns time instance representing the offset defined for this time slot."""
-
-        daily_offset = self.m_offset % 1440
-
-        return time(daily_offset // 60, daily_offset % 60)
-
-    @property
-    def day(self) -> int:
-        """Returns a day for which this time slot is defined, using the same format as datetime.weekday()."""
-
-        return self.m_offset // 1440
-
-    @property
-    def is_already_started(self) -> bool:
-        n = now()
-
-        if self.day < n.weekday():
-            return True
-        elif self.day == n.weekday() and self.time <= n.time():
-            return True
-        else:
-            return False
-
-
-class Setpoint:
-    """Setpoint attribute representing a minor mode and its status."""
-
-    def __init__(
-        self,
-        setpoint_activate: bool = False,
-        setpoint_endtime: int | None = None,
-        **kwargs,
-    ) -> None:
-        """Create new setpoint attribute."""
-
-        self.setpoint_activate = setpoint_activate
-        if setpoint_endtime is None:
-            self.setpoint_endtime = None
-        else:
-            self.setpoint_endtime = datetime.fromtimestamp(setpoint_endtime)
-
-
-class OutdoorTemperature:
-    def __init__(
-        self,
-        te: float | None = None,
-        ti: int | None = None,
-        **kwargs,
-    ) -> None:
-        """Create new measured attribute."""
-
-        self.te = te
-        if ti is None:
-            self.ti = None
-        else:
-            self.ti = datetime.fromtimestamp(ti)
-
-
-class Measured:
-    """Measured attribute representing a thermostat measurement."""
-
-    def __init__(
-        self,
-        temperature: float | None = None,
-        setpoint_temp: float | None = None,
-        est_setpoint_temp: float | None = None,
-        **kwargs,
-    ) -> None:
-        """Create new measured attribute."""
-
-        self.temperature = temperature
-        self.setpoint_temp = setpoint_temp
-        self.est_setpoint_temp = est_setpoint_temp
-
-
-class MeasurementItem:
-    """MeasurementItem attribute representing a one measurement of thermostat module."""
-
-    def __init__(
-        self,
-        beg_time: int | None = None,
-        step_time: int | None = None,
-        value: list[list[float]] = [],
-        **kwargs,
-    ) -> None:
-        """Create new measurement item."""
-
-        self.beg_time = beg_time
-        self.step_time = step_time
-        self.value = [
-            value_item for inner_list in value for value_item in inner_list
-        ]
-
-    def __eq__(self, other: MeasurementItem):
-        if not isinstance(other, MeasurementItem):
-            return False
-
-        return (
-            self.beg_time == other.beg_time
-            and self.step_time == other.step_time
-            and len(self.value) == len(other.value)
-            and all([False for i, j in zip(self.value, other.value) if i != j])
-        )
-
-
-class SystemMode(Enum):
-    """SystemMode enumeration representing possible system modes of the thermostat."""
-
-    WINTER = "winter"
-    SUMMER = "summer"
-    FROSTGUARD = "frostguard"
-
-
-class SetpointMode(Enum):
-    """SetpointMode enumeration representing possible minor modes of the thermostat."""
-
-    MANUAL = "manual"
-    AWAY = "away"
-    HWB = "hwb"
-
-
-class MeasurementType(Enum):
-    """MeasurementType enumeration representing possible measurements of the thermostat."""
-
-    TEMPERATURE = "temperature"
-    SETPOINT_TEMPERATURE = "sp_temperature"
-    SUM_BOILER_ON = "sum_boiler_on"
-    SUM_BOILER_OFF = "sum_boiler_off"
-
-    SUM_ENERGY_GAS_HEATING = "sum_energy_gaz_heating"
-    SUM_ENERGY_GAS_WATER = "sum_energy_gaz_hot_water"
-    SUM_ENERGY_ELEC_HEATING = "sum_energy_elec_heating"
-    SUM_ENERGY_ELEC_WATER = "sum_energy_elec_hot_water"
-
-
-class MeasurementScale(Enum):
-    """MeasurementScale enumeration representing possible scale options for measurements of the thermostat."""
-
-    MAX = "max"
-    FIVE_MINS = "5min"
-    HALF_HOUR = "30min"
-    HOUR = "1hour"
-    THREE_HOURS = "3hours"
-    SIX_HOURS = "6hours"
-    DAY = "1day"
-    WEEK = "1week"
-    MONTH = "1month"

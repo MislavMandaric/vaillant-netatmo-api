@@ -1,0 +1,382 @@
+{
+    "body": {
+        "devices": [
+            {
+                "_id": "70:ee:50:3f:c3:76",
+                "date_creation": {
+                    "$date": {
+                        "$numberLong": "1546607939000"
+                    }
+                },
+                "device_group": {
+                    "$oid": "54f03cba1912f5fe66085b04"
+                },
+                "type": "NAVaillant",
+                "cipher_id": "enc:16:S8emV+NJ6noF38MtaA6pJsgmafU20TnYjgTMIFgShAEQjf0dJQbDHAm8oMQrQ5dw",
+                "applications": [
+                    {
+                        "application": {
+                            "$oid": "555c91a7fe775984658b4577"
+                        },
+                        "access_token": "70:ee:50:3f:c3:76|070a66308bf5c646813229c0c6e31276",
+                        "expiration_token": {
+                            "$date": {
+                                "$numberLong": "1625330885000"
+                            }
+                        },
+                        "usage": 3
+                    }
+                ],
+                "date_setup": {
+                    "$date": {
+                        "$numberLong": "1571947468113"
+                    }
+                },
+                "last_setup": 1571947468,
+                "recompute_outdoor_time": 1753905236,
+                "record_storage": "san_vaillant",
+                "update_device": true,
+                "last_sync_asked": 1753899310,
+                "udp_conn": true,
+                "module_history": [
+                    "07:00:00:55:e0:3a"
+                ],
+                "boiler_oem_serial": "21193300100219470001005639N6",
+                "dev_has_init": true,
+                "dhw": 55,
+                "firmware": 1030,
+                "last_fw_update": 1719243396,
+                "netcom_transport": "tcp",
+                "oem_serial": "21191900201972250932005988N4",
+                "subtype": "NAEbusVaillant",
+                "dhw_max": 65,
+                "dhw_min": 35,
+                "hot_water_anticipating": false,
+                "last_status_store": 1753899278,
+                "rf_amb_status": 82,
+                "wifi_status": 78,
+                "last_time_boiler_on": 1641888601,
+                "mg_station_name": "HR-Zagreb/Gric",
+                "upgrade_record_ts": 1571957547,
+                "fail_amount": [
+                    [
+                        1641859200,
+                        0
+                    ],
+                    [
+                        1641686400,
+                        0
+                    ],
+                    [
+                        1640995200,
+                        0
+                    ]
+                ],
+                "dhw_updated": false,
+                "config_version": {
+                    "common": 35,
+                    "homeconf": 1
+                },
+                "home_id": "61dd805dd295b7466a3fe82f",
+                "migration_netcomv2_vaillant": true,
+                "migration_netcomv2_vaillant_date": 1641906269,
+                "boiler_error": [],
+                "boiler_id": "21193300100219470001005639N6",
+                "dhw_enabled": false,
+                "ebus_error": true,
+                "emf_avail": false,
+                "firmware_private": 1030,
+                "enable_user_maintenance_notifications": true,
+                "last_toggle_user_maintenance_notifications": 1719243445,
+                "dhw_setpoint_endtime": 1744347600,
+                "station_name": "Home",
+                "setpoint_default_duration": 120,
+                "place": {
+                    "altitude": 119,
+                    "city": "Zagreb",
+                    "continent": "Europe",
+                    "country": "HR",
+                    "country_name": "Croatia",
+                    "location": [
+                        15.9435595,
+                        45.7998126
+                    ],
+                    "street": "Novigradska ulica",
+                    "timezone": "Europe/Belgrade",
+                    "trust_location": true
+                },
+                "last_plug_seen": 1753899278,
+                "outdoor_temperature": {
+                    "te": 21,
+                    "ti": 1753903739
+                },
+                "system_mode": "summer",
+                "setpoint_hwb": {
+                    "setpoint_activate": false,
+                    "setpoint_endtime": 1744347600
+                },
+                "modules": [
+                    {
+                        "_id": "07:00:00:55:e0:3a",
+                        "type": "NAThermVaillant",
+                        "module_name": "Thermostat",
+                        "anticipating": false,
+                        "id": "07:00:00:55:e0:3a",
+                        "last_setup": {
+                            "$date": {
+                                "$numberLong": "1571947487583"
+                            }
+                        },
+                        "date_setup": {
+                            "$date": {
+                                "$numberLong": "1571947487583"
+                            }
+                        },
+                        "name": "Thermostat",
+                        "firmware": 14,
+                        "last_message": 1753899275,
+                        "rf_status": 62,
+                        "battery_vp": 4087,
+                        "boiler_status": false,
+                        "radio_id": 2,
+                        "reachable": true,
+                        "last_fw_update": 1641938403,
+                        "battery_percent": 72,
+                        "last_therm_seen": 1753899275,
+                        "setpoint_away": {
+                            "setpoint_activate": false
+                        },
+                        "setpoint_manual": {
+                            "setpoint_activate": false
+                        },
+                        "therm_program_list": [
+                            {
+                                "timetable": [
+                                    {
+                                        "m_offset": 0,
+                                        "id": 1
+                                    },
+                                    {
+                                        "m_offset": 420,
+                                        "id": 0
+                                    },
+                                    {
+                                        "m_offset": 1140,
+                                        "id": 1
+                                    },
+                                    {
+                                        "m_offset": 1860,
+                                        "id": 0
+                                    },
+                                    {
+                                        "m_offset": 2580,
+                                        "id": 1
+                                    },
+                                    {
+                                        "m_offset": 3300,
+                                        "id": 0
+                                    },
+                                    {
+                                        "m_offset": 4020,
+                                        "id": 1
+                                    },
+                                    {
+                                        "m_offset": 4740,
+                                        "id": 0
+                                    },
+                                    {
+                                        "m_offset": 5460,
+                                        "id": 1
+                                    },
+                                    {
+                                        "m_offset": 6180,
+                                        "id": 0
+                                    },
+                                    {
+                                        "m_offset": 6900,
+                                        "id": 1
+                                    },
+                                    {
+                                        "m_offset": 7620,
+                                        "id": 0
+                                    },
+                                    {
+                                        "m_offset": 8340,
+                                        "id": 1
+                                    },
+                                    {
+                                        "m_offset": 9060,
+                                        "id": 0
+                                    },
+                                    {
+                                        "m_offset": 9780,
+                                        "id": 1
+                                    }
+                                ],
+                                "zones": [
+                                    {
+                                        "id": 2,
+                                        "type": 5,
+                                        "modules": [],
+                                        "temp": 16,
+                                        "hw": false
+                                    },
+                                    {
+                                        "name": "At home",
+                                        "id": 0,
+                                        "type": 0,
+                                        "modules": [],
+                                        "temp": 22,
+                                        "hw": true
+                                    },
+                                    {
+                                        "name": "Night",
+                                        "id": 1,
+                                        "type": 1,
+                                        "modules": [],
+                                        "temp": 22,
+                                        "hw": true
+                                    },
+                                    {
+                                        "type": 3,
+                                        "id": 3,
+                                        "temp": 7,
+                                        "hw": false
+                                    }
+                                ],
+                                "name": "Default",
+                                "program_id": "5db203dfad7ab37dc27c388a",
+                                "selected": true
+                            },
+                            {
+                                "timetable": [
+                                    {
+                                        "m_offset": 0,
+                                        "id": 1
+                                    },
+                                    {
+                                        "m_offset": 420,
+                                        "id": 0
+                                    },
+                                    {
+                                        "m_offset": 1320,
+                                        "id": 1
+                                    },
+                                    {
+                                        "m_offset": 1860,
+                                        "id": 0
+                                    },
+                                    {
+                                        "m_offset": 2760,
+                                        "id": 1
+                                    },
+                                    {
+                                        "m_offset": 3300,
+                                        "id": 0
+                                    },
+                                    {
+                                        "m_offset": 4200,
+                                        "id": 1
+                                    },
+                                    {
+                                        "m_offset": 4740,
+                                        "id": 0
+                                    },
+                                    {
+                                        "m_offset": 5640,
+                                        "id": 1
+                                    },
+                                    {
+                                        "m_offset": 6180,
+                                        "id": 0
+                                    },
+                                    {
+                                        "m_offset": 7080,
+                                        "id": 1
+                                    },
+                                    {
+                                        "m_offset": 7620,
+                                        "id": 0
+                                    },
+                                    {
+                                        "m_offset": 8520,
+                                        "id": 1
+                                    },
+                                    {
+                                        "m_offset": 9060,
+                                        "id": 0
+                                    },
+                                    {
+                                        "m_offset": 9960,
+                                        "id": 1
+                                    }
+                                ],
+                                "zones": [
+                                    {
+                                        "id": 0,
+                                        "type": 0,
+                                        "modules": [],
+                                        "temp": 20,
+                                        "hw": true
+                                    },
+                                    {
+                                        "id": 1,
+                                        "type": 1,
+                                        "modules": [],
+                                        "temp": 17,
+                                        "hw": false
+                                    },
+                                    {
+                                        "id": 6,
+                                        "type": 5,
+                                        "modules": [],
+                                        "temp": 18,
+                                        "hw": false
+                                    },
+                                    {
+                                        "type": 3,
+                                        "id": 2,
+                                        "temp": 7,
+                                        "hw": false
+                                    }
+                                ],
+                                "name": "Test Schedule",
+                                "program_id": "61980069ae4c646b2852983e"
+                            }
+                        ],
+                        "measured": {
+                            "time": 1753899273,
+                            "temperature": 25.9,
+                            "est_setpoint_temp": 7
+                        }
+                    }
+                ],
+                "syncing": true,
+                "ebus_status": {
+                    "ebus_error": true,
+                    "boiler_error": false,
+                    "maintenance_status": false,
+                    "refill_water": false,
+                    "emf_avail": false
+                }
+            }
+        ],
+        "user": {
+            "mail": "mmika11110+ha@gmail.com",
+            "administrative": {
+                "lang": "en-US",
+                "reg_locale": "en-US",
+                "country": "HR",
+                "unit": 0,
+                "windunit": 0,
+                "pressureunit": 0,
+                "feel_like_algo": 0
+            },
+            "pending_user_consent": true,
+            "app_telemetry": false
+        }
+    },
+    "status": "ok",
+    "time_exec": 0.047837018966674805,
+    "time_server": 1753899310
+}
