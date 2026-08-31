@@ -458,6 +458,39 @@ class ThermostatClient(BaseClient):
         return setpoint_temp
 
 
+class EbusStatus:
+    """EbusStatus attribute representing the fault and maintenance flags the boiler reports over eBUS."""
+
+    def __init__(
+        self,
+        ebus_error: bool = False,
+        boiler_error: bool = False,
+        maintenance_status: bool = False,
+        refill_water: bool = False,
+        emf_avail: bool = False,
+        **kwargs,
+    ) -> None:
+        """Create new ebus status attribute."""
+
+        self.ebus_error = ebus_error
+        self.boiler_error = boiler_error
+        self.maintenance_status = maintenance_status
+        self.refill_water = refill_water
+        self.emf_avail = emf_avail
+
+    def __eq__(self, other: EbusStatus):
+        if not isinstance(other, EbusStatus):
+            return False
+
+        return (
+            self.ebus_error == other.ebus_error
+            and self.boiler_error == other.boiler_error
+            and self.maintenance_status == other.maintenance_status
+            and self.refill_water == other.refill_water
+            and self.emf_avail == other.emf_avail
+        )
+
+
 class Device:
     """Device model representing a Vaillant boiler. Contains multiple modules."""
 
@@ -475,6 +508,8 @@ class Device:
         outdoor_temperature: dict = {},
         system_mode: str | None = None,
         setpoint_hwb: dict = {},
+        ebus_status: dict = {},
+        dhw_enabled: bool = False,
         modules: list[dict] = [],
         **kwargs,
     ) -> None:
@@ -492,6 +527,8 @@ class Device:
         self.outdoor_temperature = OutdoorTemperature(**outdoor_temperature)
         self.system_mode = SystemMode(system_mode)
         self.setpoint_hwb = Setpoint(**setpoint_hwb)
+        self.ebus_status = EbusStatus(**ebus_status)
+        self.dhw_enabled = dhw_enabled
         self.modules = [Module(**module) for module in modules]
 
     def __eq__(self, other: Device):
