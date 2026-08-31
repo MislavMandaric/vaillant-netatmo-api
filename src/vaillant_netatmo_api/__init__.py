@@ -24,6 +24,7 @@ from .home import (
 )
 from .thermostat import (
     Device,
+    EbusStatus,
     Measured,
     MeasurementItem,
     MeasurementScale,
@@ -61,6 +62,7 @@ __all__ = [
     "ThermMode",
     "ThermSetpointMode",
     "Device",
+    "EbusStatus",
     "Module",
     "Program",
     "Zone",
